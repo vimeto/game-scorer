@@ -7,17 +7,14 @@ export async function middleware(req: NextRequest) {
   const url = req.url;
 
   if (!token) {
-    if (url.includes("login") || url.includes("signup")) return NextResponse.next();
+    if (url.includes("login") || url.includes("signup") || url.includes("account/verify_email")) return NextResponse.next();
     return NextResponse.redirect(`${origin}/login`);
   }
-  if (token.emailVerified) {
-    if (url.includes("login") || url.includes("signup")) return NextResponse.redirect(`${origin}/`);
-    return NextResponse.next();
-  }
-  if (url.includes("verify_email")) return NextResponse.next();
-  return NextResponse.redirect(`${origin}/verify_email`);
+
+  if (url.includes("login") || url.includes("signup") || url.includes("account/verify_email")) return NextResponse.redirect(`${origin}/`);
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/login", "/signup", "/verify_email"]
+  matcher: ["/", "/login", "/signup", "/verify_email", "/account/(.*)"]
 }

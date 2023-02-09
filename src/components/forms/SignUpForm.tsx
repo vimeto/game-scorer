@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { api } from "../../utils/api";
@@ -17,30 +16,25 @@ type SignUpFormValues = {
 const SignUpForm = () => {
   const { register, handleSubmit } = useForm<SignUpFormValues>();
   const router = useRouter();
-  const signUpMutation = api.auth.signUp.useMutation();
+  const signUpMutation = api.user.create.useMutation();
 
   const onSubmit: SubmitHandler<SignUpFormValues> = async (data, e) => {
     e?.preventDefault();
 
     try {
-      const userRes = await signUpMutation.mutateAsync(data);
+      const signupResult = await signUpMutation.mutateAsync(data);
 
       // TODO: remove this
-      if (!userRes) { throw new Error("Failed to create user..."); }
+      if (!signupResult) { throw new Error("Failed to create user..."); }
 
-      const res = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (!res || res.status !== 200) {
-        throw new Error("Failed to singin...");
-      }
+      console.log("user created, please now login");
+      // TODO: create a notice to user about this
 
       const callbackUrl = router.query.callbackUrl ? String(router.query.callbackUrl) : "/";
-
-      await router.replace(callbackUrl);
+      await router.replace({
+        pathname: "/login",
+        query: { callbackUrl },
+      });
     } catch (e) {
       console.log("err", e);
     }

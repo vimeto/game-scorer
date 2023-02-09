@@ -19,6 +19,13 @@ export const serverSchema = z.object({
     // VERCEL_URL doesn't include `https` so it cant be validated as a URL
     process.env.VERCEL ? z.string() : z.string().url(),
   ),
+  EMAIL_SECRET: z.string(),
+  EMAIL_HOST: z.string(),
+  // preprocess to make sure it's a number
+  EMAIL_PORT: z.preprocess((str) => Number(str) || 465, z.number()),
+  EMAIL_USER: z.string(),
+  EMAIL_PASSWORD: z.string(),
+  EMAIL_FROM: z.string(),
 });
 
 /**
@@ -31,6 +38,12 @@ export const serverEnv = {
   NODE_ENV: process.env.NODE_ENV,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  EMAIL_SECRET: process.env.EMAIL_SECRET,
+  EMAIL_HOST: process.env.EMAIL_HOST,
+  EMAIL_PORT: process.env.EMAIL_PORT,
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+  EMAIL_FROM: process.env.EMAIL_FROM,
 };
 
 /**

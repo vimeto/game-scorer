@@ -25,7 +25,8 @@ const LoginForm = () => {
       });
 
       if (!res || res.status !== 200) {
-        throw new Error("Failed to singin...");
+        const error = res?.error || "";
+        throw new Error(`Failed to singin... ${error}`);
       }
 
       const callbackUrl = router.query.callbackUrl ? String(router.query.callbackUrl) : "/";

@@ -1,29 +1,24 @@
 import { useState } from "react";
 import Input from "./ui/Input";
 
-const ContextoCard: React.FC = () => {
+const WordleCard: React.FC = () => {
   const [inputsValid, setInputsValid] = useState<{ first: boolean, second: boolean }>({ first: false, second: false });
   const [inputValues, setInputValues] = useState<{ first: string, second: string }>({ first: "", second: "" });
 
   const handleInput = (key: keyof typeof inputValues) => {
     return (a: string) => {
-      const aNum = Number(a);
-      if (!aNum || aNum === 0) {
-        setInputsValid({ ...inputsValid, [key]: false });
-        setInputValues({ ...inputValues, [key]: "" });
-        return;
-      }
+      const re = /^[1-6]$/;
+      if (a.length > 0 && !re.exec(a)) return;
 
-      if (aNum >= 1000) return;
-
-      setInputsValid({ ...inputsValid, [key]: true });
+      if (re.exec(a)) setInputsValid({ ...inputsValid, [key]: true });
+      else setInputsValid({ ...inputsValid, [key]: false });
       setInputValues({ ...inputValues, [key]: a });
     };
   };
 
   return (
-    <div className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex flex-col items-center max-w-[250px] p-2 rounded gap-2">
-      <h3 className="text-2xl font-bold text-center">Contexto</h3>
+    <div className="flex flex-col gap-4 rounded-xl bg-gray-300/10 p-4 text-white hover:bg-gray-100/10">
+      <h3 className="text-2xl font-bold text-center">Wordle</h3>
       <h3 className="text-xl font-bold text-center">Winner</h3>
       <div className="flex flex-row justify-center gap-4">
         <Input valid={inputsValid.first} id={"1"} placeholder={"5"} title={"Viivi"} value={inputValues.first} setValue={handleInput("first")} />
@@ -39,4 +34,4 @@ const ContextoCard: React.FC = () => {
   );
 };
 
-export default ContextoCard;
+export default WordleCard;

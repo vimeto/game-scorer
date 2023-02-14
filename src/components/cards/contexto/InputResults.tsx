@@ -1,70 +1,26 @@
 import { TRPCClientError } from "@trpc/client";
-import { ChangeEvent, useEffect, useState } from "react";
-import { type WordleData } from "../../../entities/types";
+import { useState } from "react";
+import { type ContextoData } from "../../../entities/types";
 import { api } from "../../../utils/api";
 import { LoginInput } from "../../ui/LoginInput";
-import { getWordleIdentifier } from "../../../entities/wordleHelper";
 
 interface InputResultsProps {
   setUpdatePanelOpen: (value: boolean) => void;
   updatePanelOpen: boolean;
-  setData: (value: WordleData) => void;
+  setData: (value: ContextoData) => void;
   refreshGroups: () => Promise<void>;
 }
-
-// {
-//   "Contexto": {
-//       "score": 8,
-//       "comment": "Another manually added",
-//       "data": {
-//           "red": 12,
-//           "green": 14,
-//           "yellow": 9
-//       },
-//       "username": "itsviivi"
-//   },
-//   "Wordle": {
-//       "score": 3,
-//       "comment": "Nice",
-//       "data": [
-//           [
-//               0,
-//               2,
-//               2,
-//               0,
-//               0
-//           ],
-//           [
-//               2,
-//               2,
-//               2,
-//               0,
-//               2
-//           ],
-//           [
-//               2,
-//               2,
-//               2,
-//               2,
-//               2
-//           ]
-//       ],
-//       "username": "vimetoivonen"
-//   },
-//   "date": "2023.02.10"
-// }
-
 
 const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdatePanelOpen, setData, refreshGroups }) => {
   const [inputValue, setInputValue] = useState("");
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const inputWordleResults = api.wordle.update.useMutation();
+  const inputContextoResults = api.contexto.update.useMutation();
 
   const onSubmit = async () => {
     try {
-      const { data } = await inputWordleResults.mutateAsync({ data: inputValue, comment });
+      const { data } = await inputContextoResults.mutateAsync({ data: inputValue, comment });
       setUpdatePanelOpen(!updatePanelOpen);
       setData(data);
       await refreshGroups();
@@ -73,15 +29,15 @@ const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdateP
       if (e instanceof TRPCClientError) {
         const { message } = e;
         setError(message);
-        setTimeout(() => setError(null), 7000);
+        // setTimeout(() => setError(null), 7000);
       }
     }
   }
 
   return (
     <div className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex flex-col items-center w-[250px] p-2 rounded gap-2">
-      <h3 className="text-2xl text-center">Wordle</h3>
-      <h3 className="text-md text-center">Input results for #{getWordleIdentifier()}</h3>
+      <h3 className="text-xl text-center">Contexto</h3>
+      <h3 className="text-md text-center">Input results for #xxx</h3>
       {error && (
         <div className="bg-red-400/70 p-2 rounded outline-1 outline-red-400 outline w-full text-center">
           {error}
@@ -92,7 +48,6 @@ const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdateP
         rows={8}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="Input results here"
         />
       <LoginInput id={"comment"} type={"text"} placeholder={"Comment"} value={comment} onChange={e => setComment(e.target.value)} />
       <div

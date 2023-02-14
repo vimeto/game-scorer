@@ -6,7 +6,7 @@ const RootLayout: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#C7B8EA] to-[#485696]">
       <NavBar />
-      <main className="max-w-screen-md mx-auto pt-20">
+      <main className="max-w-screen-md mx-auto pb-12">
         {children}
       </main>
     </div>

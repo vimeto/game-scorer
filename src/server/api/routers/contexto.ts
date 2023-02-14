@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseInput } from "../../../entities/wordleHelper";
+import { parseInput } from "../../../entities/contextoHelper";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -9,7 +9,7 @@ const updateScore = z.object({
   comment: z.string().optional(),
 });
 
-export const wordleRouter = createTRPCRouter({
+export const contextoRouter = createTRPCRouter({
   get: protectedProcedure
     .query(async ({ ctx }) => {
       const userId = ctx.session.user.id;
@@ -20,11 +20,11 @@ export const wordleRouter = createTRPCRouter({
       const endOfToday = new Date();
       endOfToday.setHours(23, 59, 59, 999);
 
-      const wordleScore = await prisma.gameScore.findFirst({
+      const contextoScore = await prisma.gameScore.findFirst({
         where: {
           userId,
           game: {
-            name: "Wordle",
+            name: "Contexto",
           },
           createdAt: {
             gte: beginningOfToday,
@@ -33,24 +33,23 @@ export const wordleRouter = createTRPCRouter({
         },
       });
 
-      const wordleShape = z.object({
+      const contextoShape = z.object({
         id: z.number(),
         score: z.number(),
-        rows: z.array(z.array(z.number())),
+        scores: z.object({
+          green: z.number().nullable(),
+          yellow: z.number().nullable(),
+          red: z.number().nullable(),
+        }),
         comment: z.string().optional(),
       });
+      if (!contextoScore) return { data: null };
 
-      if (!wordleScore) {
-        return { data: null };
-      }
-
-      console.log(wordleScore);
-
-      const a = wordleShape.safeParse({
-        id: Number(wordleScore.identifier),
-        score: wordleScore.score,
-        rows: wordleScore.data,
-        comment: wordleScore.comment,
+      const a = contextoShape.safeParse({
+        id: Number(contextoScore.identifier),
+        score: contextoScore.score,
+        scores: contextoScore.data,
+        comment: contextoScore.comment,
       });
 
       if (!a.success) {
@@ -70,24 +69,24 @@ export const wordleRouter = createTRPCRouter({
       if (error.length > 0) throw new Error(error);
       if (!data) throw new Error("Unable to parse input");
 
-      const yesterdayStartOfDay = new Date();
-      yesterdayStartOfDay.setDate(yesterdayStartOfDay.getDate() - 1);
-      yesterdayStartOfDay.setHours(0, 0, 0, 0);
-      const yesterdayEndOfDay = new Date();
-      yesterdayEndOfDay.setDate(yesterdayEndOfDay.getDate() - 1);
-      yesterdayEndOfDay.setHours(23, 59, 59, 999);
+      const beginningOfYesterday = new Date();
+      beginningOfYesterday.setDate(beginningOfYesterday.getDate() - 1);
+      beginningOfYesterday.setHours(0, 0, 0, 0);
+      const endOfYesterday = new Date();
+      endOfYesterday.setDate(endOfYesterday.getDate() - 1);
+      endOfYesterday.setHours(23, 59, 59, 999);
 
       try {
         const yesterdayScore = await prisma.gameScore.findFirst({
           where: {
             userId,
-            game: {
-              name: "Wordle",
-            },
+            // game: {
+            //   name: "Contexto",
+            // },
             date: {
-              gte: yesterdayStartOfDay,
-              lte: yesterdayEndOfDay,
-            }
+              gte: beginningOfYesterday,
+              lte: endOfYesterday,
+            },
           },
         });
 
@@ -100,11 +99,11 @@ export const wordleRouter = createTRPCRouter({
             },
             game: {
               connect: {
-                name: "Wordle",
+                name: "Contexto",
               },
             },
             score: data.score,
-            data: data.rows,
+            data: data.scores,
             comment: input.comment,
             identifier: String(data.id) || "",
             date: new Date(),

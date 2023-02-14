@@ -41,7 +41,7 @@ const SignUpForm = () => {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#C7B8EA] to-[#485696]">
+    <main className="flex min-h-screen flex-col items-center justify-center">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <h1 className="mb-2 text-5xl font-extrabold text-center tracking-tight text-white/90 sm:text-[5rem]">
           SignUp

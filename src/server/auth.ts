@@ -62,6 +62,7 @@ export const authOptions: NextAuthOptions = {
         if (!zodCredentials.success) { return null; }
 
         const { email, password } = zodCredentials.data;
+        // TODO: update to only perform one query
         const possibleUser = await prisma.user.findUnique({
           where: {
             email

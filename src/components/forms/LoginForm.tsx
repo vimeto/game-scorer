@@ -38,7 +38,7 @@ const LoginForm = () => {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#C7B8EA] to-[#485696]">
+    <main className="flex flex-col items-center justify-center min-h-screen">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <h1 className="text-5xl font-extrabold text-center tracking-tight text-white/90 sm:text-[5rem]">
           Login

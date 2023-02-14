@@ -15,10 +15,9 @@ const signUpShape = z.object({
   passwordConfirmation: z.string(),
 });
 
+// TODO: prob dont need id as it is in session
 const meShape = z.object({
-  // id is a nonempty string
   id: z.string().min(1),
-  // id: z.string(),
 });
 
 export const userRouter = createTRPCRouter({

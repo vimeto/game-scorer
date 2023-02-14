@@ -1,5 +1,12 @@
 import { WordleEmojiMap, type WordleData } from "./types";
 
+const getWordleIdentifier = () => {
+  const wordleCreationDate = new Date("2021-06-19T00:00:00.000Z");
+  const beginningOfToday = new Date();
+  beginningOfToday.setHours(0, 0, 0, 0);
+  return Math.floor((beginningOfToday.getTime() - wordleCreationDate.getTime()) / (1000 * 3600 * 24)) + 1;
+}
+
 const parseInput = (input: string): { data?: WordleData, error: string } => {
   const lines = input.split('\n');
   let firstLineFound = false;
@@ -15,7 +22,10 @@ const parseInput = (input: string): { data?: WordleData, error: string } => {
     const match = line.match(re);
     if (match) {
       const [, id, x] = match;
-      data.id = Number(id) || 0;
+      const identifier = Number(id) || 0;
+      if (identifier !== getWordleIdentifier()) throw new Error;
+
+      data.id = identifier;
       data.score = Number(x) || 0;
       firstLineFound = true;
     }
@@ -23,11 +33,18 @@ const parseInput = (input: string): { data?: WordleData, error: string } => {
 
   for (const line of lines) {
     if (!firstLineFound) {
-      parseFirstLine(line);
+      try {
+        parseFirstLine(line);
+      } catch (e: unknown) {
+        return {
+          error: "Identifier does not match today's wordle"
+        }
+      }
       continue;
     }
 
     const row: number[] = [];
+    console.log(line);
 
     for (const char of line) {
       if (char in WordleEmojiMap) {
@@ -45,6 +62,8 @@ const parseInput = (input: string): { data?: WordleData, error: string } => {
       error: "Unable to find first line"
     }
   }
+
+  console.log(data.rows);
 
   if (data.rows.length > 0 && (data.rows[data.rows.length - 1] as number[]).every((value) => value === 2)) {
     const score = data.score;
@@ -67,4 +86,5 @@ const parseInput = (input: string): { data?: WordleData, error: string } => {
 
 export {
   parseInput,
+  getWordleIdentifier,
 }

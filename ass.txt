@@ -1,0 +1,64 @@
+
+// Write a query that finds usergroup id name and user name for all usergroups that have users with the name "John"
+
+
+SELECT UserGroup.id, UserGroup.name, User.firstName FROM
+UserGroup JOIN _UserToUserGroup ON UserGroup.id = _UserToUserGroup.B JOIN User ON _UserToUserGroup.A = User.id;
+
+// Write a query that finds lowest score from gamescore for a usergroup and outputs the user name
+
+
+SELECT User.firstName, Game.name, MIN(GameScore.score)
+FROM User
+JOIN _UserToUserGroup ON _UserToUserGroup.A = User.id
+JOIN UserGroup ON _UserToUserGroup.B = UserGroup.id
+JOIN GameScore ON GameScore.userId = User.id
+JOIN Game ON GameScore.gameId = Game.id
+WHERE Game.name IN ('Contexto', 'Wordle') AND UserGroup.id = 'cldyep4tw00008zr09r6uejuq'
+GROUP BY User.firstName, Game.name
+ORDER BY MIN(GameScore.score) ASC;
+
+SELECT Game.name, UserGroup.id, User.username, UserGroup.name, MIN(GameScore.score)
+FROM User
+JOIN _UserToUserGroup ON _UserToUserGroup.A = User.id
+JOIN UserGroup ON _UserToUserGroup.B = UserGroup.id
+JOIN GameScore ON GameScore.userId = User.id
+JOIN Game ON GameScore.gameId = Game.id
+WHERE Game.name IN ('Contexto', 'Wordle') AND UserGroup.id = 'cldyep4tw00008zr09r6uejuq'
+GROUP BY Game.name, UserGroup.id, User.id
+ORDER BY MIN(GameScore.score) ASC
+
+SELECT Game.name, UserGroup.id, u1.username, UserGroup.name, MIN(GameScore.score)
+FROM UserGroup
+JOIN _UserToUserGroup utug1 ON utug1.B = UserGroup.id
+JOIN User u1 ON utug1.A = u1.id
+JOIN _UserToUserGroup utug2 ON utug2.B = UserGroup.id
+JOIN User u2 ON utug2.A = u2.id
+JOIN GameScore ON GameScore.userId = u1.id
+JOIN Game ON GameScore.gameId = Game.id
+WHERE Game.name IN ('Contexto', 'Wordle') AND u2.id = 'cldxe0mx800008z14av7t787z'
+GROUP BY Game.name, UserGroup.id, u1.id
+ORDER BY MIN(GameScore.score) ASC;
+
+
+SELECT Game.name, UserGroup.id, User.username, UserGroup.name, MIN(GameScore.score), ROW_NUMBER() OVER(PARTITION BY Game.name ORDER BY MIN(GameScore.score) ASC) AS row_number
+FROM User
+JOIN _UserToUserGroup ON _UserToUserGroup.A = User.id
+JOIN UserGroup ON _UserToUserGroup.B = UserGroup.id
+JOIN GameScore ON GameScore.userId = User.id
+JOIN Game ON GameScore.gameId = Game.id
+WHERE Game.name IN ('Contexto', 'Wordle') AND UserGroup.id = 'cldyep4tw00008zr09r6uejuq';
+
+WITH added_row_number AS (
+  SELECT
+    *,
+    ROW_NUMBER() OVER(PARTITION BY year ORDER BY result DESC) AS row_number
+  FROM exam_results
+)
+SELECT
+  *
+FROM added_row_number
+WHERE row_number = 1;
+
+A = User id
+B = UserGroup id

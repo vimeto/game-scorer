@@ -26,16 +26,15 @@ const Index: NextPage = () => {
           onClick={() => { signOut().catch(e => console.error(e)) }}>
           Game scorer
         </h1>
-        <HeaderCards />
+        <HeaderCards refreshGroups={async () => { await query.refetch() }} />
       </div>
       <div className="pt-20">
         <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-[4rem] text-center leading-normal">
           Today
         </h1>
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-20 items-baseline"> */}
-        <div className="grid grid-flow-row sm:grid-flow-col gap-2 justify-center items-start pt-16">
+        <div className="grid grid-flow-row sm:grid-flow-col gap-4 justify-center items-start pt-16">
+        {/* <div className="grid grid-flow-row sm:grid-flow-col gap-2 justify-center items-start pt-16"> */}
           <WordleCard refreshGroups={async () => { await query.refetch() }} />
-          {/* <WordleCard /> */}
           <ContextoCard refreshGroups={async () => { await query.refetch() }} />
         </div>
       </div>

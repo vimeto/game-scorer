@@ -96,7 +96,7 @@ const MyResultsContextoCell: React.FC<{ data: GroupResultType["Contexto"] | unde
 
 const getDateObject: () => { fromDate: Date, toDate: Date } = () => {
   const today = new Date();
-  const startDate = subDays(today, 7);
+  const startDate = subDays(today, 6);
 
   return { fromDate: startOfDay(startDate), toDate: endOfDay(today) }
 }
@@ -106,8 +106,6 @@ const ResultsCard: React.FC<{ id: string }> = ({ id }) => {
 
   if (query.isLoading || !query.data) return <div>Loading...</div>
   if (query.isError) return <div>Error :(</div>
-
-  console.log(query.data);
 
   return (
     <div className="bg-gray-300/10 text-white max-w-screen-sm mx-auto mt-12 rounded">

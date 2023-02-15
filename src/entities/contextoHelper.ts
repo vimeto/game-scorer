@@ -1,5 +1,12 @@
 import { type ContextoData } from "./types";
 
+const getContextoIdentifier = () => {
+  const contextoCreationDate = new Date("2022-09-18T00:00:00.000Z");
+  const beginningOfToday = new Date();
+  beginningOfToday.setHours(0, 0, 0, 0);
+  return Math.floor((beginningOfToday.getTime() - contextoCreationDate.getTime()) / (1000 * 3600 * 24)) + 1;
+}
+
 // const input = `I played contexto.me #133 and got it in 103 guesses.
 
 // 🟩 10
@@ -110,4 +117,5 @@ const parseInput = (input: string): { data?: ContextoData, error: string } => {
 
 export {
   parseInput,
+  getContextoIdentifier,
 }

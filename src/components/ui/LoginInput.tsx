@@ -6,9 +6,9 @@ export type Props = React.DetailedHTMLProps<
   >
 
 export const LoginInput = React.forwardRef<HTMLInputElement, Props>(
-  ({ value, type, name, onChange, autoComplete, placeholder, id }: Props, ref) => {
+  ({ value, type, name, onChange, autoComplete, placeholder, id, width }: Props, ref) => {
     return (
-      <div className="relative w-60">
+      <div className={`relative ${width ?? "w-60"}`}>
         <input
           type={type}
           ref={ref}

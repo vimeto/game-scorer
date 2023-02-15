@@ -1,7 +1,7 @@
 // create a page with profile picture, username, email, and a button to logout
 
 import { InferGetServerSidePropsType, type GetServerSideProps } from "next";
-import { getSession, useSession } from "next-auth/react";
+import { getSession, signOut, useSession } from "next-auth/react";
 import ProfilePicture from "../../components/me/ProfilePicture";
 import StreakCard from "../../components/ui/StreakCard";
 import { api } from "../../utils/api";
@@ -52,8 +52,8 @@ const MePage = ({ id }: { id: string }) => {
 
   return (
     <div className="flex flex-col items-center pt-24 gap-4">
-      {me.data.pictureBackgroundColor && me.data.firstName && (
-        <ProfilePicture backgroundColor={me.data.pictureBackgroundColor} firstLetter={me.data.firstName.slice(0, 1)} hasStreak={true} />
+      {me.data.bgColor && me.data.firstName && (
+        <ProfilePicture backgroundColor={me.data.bgColor} firstLetter={me.data.firstName.slice(0, 1)} hasStreak={true} />
       )}
       <h2 className="text-lg italic">{`@${me.data.username || ""}`}</h2>
       <h2 className="text-lg bg-[blue-600]">{`${me.data.firstName || ""} ${me.data.lastName || ""}`}</h2>
@@ -62,8 +62,15 @@ const MePage = ({ id }: { id: string }) => {
         <span>Reset password</span>
         <span>→</span>
       </div>
+      <div
+        className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex space-between gap-4 px-6 py-2 rounded-full hover:gap-6 transition-all cursor-pointer"
+        onClick={() => { signOut().catch(e => console.error(e)) }}
+        >
+        <span>Logout</span>
+        <span>→</span>
+      </div>
 
-      <StreakCard streak={1} maxStreak={3} />
+      {/* <StreakCard streak={1} maxStreak={3} /> */}
     </div>
   );
 };

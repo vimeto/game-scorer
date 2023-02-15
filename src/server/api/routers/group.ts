@@ -1,7 +1,7 @@
 import { addDays, endOfDay, format, startOfDay } from "date-fns";
 import { JSONValue } from "superjson/dist/types";
 import { z } from "zod";
-import { GroupResultType, type GroupedUserGroupScoreValueTypes } from "../../../entities/types";
+import { GameNames, GroupResultType, UserGroupRoleNames, type GroupedUserGroupScoreValueTypes } from "../../../entities/types";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -24,6 +24,26 @@ const getWeekResultsShape = z.object({
   toDate: z.date(),
 })
 
+const createGroupShape = z.object({
+  name: z.string(),
+});
+
+const autocompleteAddUserShape = z.object({
+  id: z.string(),
+  inputValue: z.string(),
+});
+
+const addUserToGroupShape = z.object({
+  id: z.string(),
+  userId: z.string(),
+  role: z.enum([UserGroupRoleNames.ADMIN, UserGroupRoleNames.MEMBER]),
+});
+
+const inviteUserToGroupShape = z.object({
+  id: z.string(),
+  email: z.string(),
+});
+
 // "21.11.2023": { wordle: { score: string; comment?: string; data: JSON }, contexto: { score: string; comment?: string; data?: JSON } }
 
 export const groupRouter = createTRPCRouter({
@@ -42,16 +62,33 @@ export const groupRouter = createTRPCRouter({
       // endOfToday.setDate(endOfToday.getDate() - 4);
       endOfToday.setHours(23, 59, 59, 999);
 
+      // const result = await prisma.$queryRaw<UserGroupQueryType[]>`
+      //   SELECT Game.name AS gameName, UserGroup.id AS userGroupId, UserGroup.name AS userGroupName, u1.username AS username, MIN(GameScore.score) AS score
+      //   FROM UserGroup
+      //   JOIN _UserToUserGroup utug1 ON utug1.B = UserGroup.id
+      //   JOIN User u1 ON utug1.A = u1.id
+      //   JOIN _UserToUserGroup utug2 ON utug2.B = UserGroup.id
+      //   JOIN User u2 ON utug2.A = u2.id
+      //   JOIN GameScore ON GameScore.userId = u1.id
+      //   JOIN Game ON GameScore.gameId = Game.id
+      //   WHERE Game.name IN ('Contexto', 'Wordle') AND u2.id = ${userId} AND GameScore.date >= ${beginningOfToday} AND GameScore.date <= ${endOfToday}
+      //   GROUP BY Game.name, UserGroup.id, u1.id
+      //   ORDER BY MIN(GameScore.score) ASC;
+      // `;
+      //
       const result = await prisma.$queryRaw<UserGroupQueryType[]>`
         SELECT Game.name AS gameName, UserGroup.id AS userGroupId, UserGroup.name AS userGroupName, u1.username AS username, MIN(GameScore.score) AS score
         FROM UserGroup
-        JOIN _UserToUserGroup utug1 ON utug1.B = UserGroup.id
-        JOIN User u1 ON utug1.A = u1.id
-        JOIN _UserToUserGroup utug2 ON utug2.B = UserGroup.id
-        JOIN User u2 ON utug2.A = u2.id
+        JOIN UserGroupRole ugr1 ON ugr1.userGroupId = UserGroup.id
+        JOIN User u1 ON ugr1.userId = u1.id
+        JOIN UserGroupRole ugr2 ON ugr2.userGroupId = UserGroup.id
+        JOIN User u2 ON ugr2.userId = u2.id
         JOIN GameScore ON GameScore.userId = u1.id
         JOIN Game ON GameScore.gameId = Game.id
-        WHERE Game.name IN ('Contexto', 'Wordle') AND u2.id = ${userId} AND GameScore.date >= ${beginningOfToday} AND GameScore.date <= ${endOfToday}
+        WHERE Game.name IN (${GameNames.CONTEXTO}, ${GameNames.WORDLE}) AND
+        u2.id = ${userId} AND GameScore.date >= ${beginningOfToday} AND
+        GameScore.date <= ${endOfToday} AND
+        ugr1.name IN (${UserGroupRoleNames.ADMIN}, ${UserGroupRoleNames.MEMBER})
         GROUP BY Game.name, UserGroup.id, u1.id
         ORDER BY MIN(GameScore.score) ASC;
       `;
@@ -77,7 +114,13 @@ export const groupRouter = createTRPCRouter({
 
       const userUserGroups = await prisma.userGroup.findMany({
         where: {
-          members: { some: { id: userId } },
+          userGroupRoles: {
+            some: {
+              user: {
+                id: userId,
+              }
+            },
+          },
         },
       });
 
@@ -104,78 +147,28 @@ export const groupRouter = createTRPCRouter({
           select: {
             id: true,
             name: true,
-            members: {
+            userGroupRoles: {
               select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                bgColor: true,
-              }
-            }
-          }
+                name: true,
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                    firstName: true,
+                    lastName: true,
+                    bgColor: true,
+                  },
+                },
+                userInvitation: {
+                  select: {
+                    id: true,
+                    email: true,
+                  }
+                }
+              },
+            },
+          },
         });
-
-        // const group = {
-        //   id: '1',
-        //   name: 'Vilhelm & Viivi',
-        //   members: [
-        //     {
-        //       id: '1',
-        //       username: 'vimetoivonen',
-        //       firstName: 'Vilhelm',
-        //       lastName: 'Toivonen',
-        //       bgPictureColor: "#ff0000",
-        //       role: "admin",
-        //       streak: 3
-        //     },
-        //     {
-        //       id: '2',
-        //       username: 'itsviivi',
-        //       firstName: 'Viivi',
-        //       lastName: 'Alitalo',
-        //       bgPictureColor: "#00ff00",
-        //       role: "member",
-        //       streak: 1
-        //     },
-        //     {
-        //       id: '3',
-        //       username: 'itsviivi',
-        //       firstName: 'Viivi',
-        //       lastName: 'Alitalo',
-        //       bgPictureColor: "#00ff00",
-        //       role: "member",
-        //       streak: 1
-        //     },
-        //     {
-        //       id: '4',
-        //       username: 'itsviivi',
-        //       firstName: 'Viivi',
-        //       lastName: 'Alitalo',
-        //       bgPictureColor: "#00ff00",
-        //       role: "member",
-        //       streak: 1
-        //     },
-        //     {
-        //       id: '5',
-        //       username: 'itsviivi',
-        //       firstName: 'Viivi',
-        //       lastName: 'Alitalo',
-        //       bgPictureColor: "#00ff00",
-        //       role: "member",
-        //       streak: 1
-        //     },
-        //     {
-        //       id: '6',
-        //       username: 'itsviivi',
-        //       firstName: 'Viivi',
-        //       lastName: 'Alitalo',
-        //       bgPictureColor: "#00ff00",
-        //       role: "member",
-        //       streak: 1
-        //     },
-        //   ],
-        // }
 
         if (!group) {
           // TODO: test that this error is shown to user
@@ -196,15 +189,24 @@ export const groupRouter = createTRPCRouter({
             id,
           },
           select: {
-            members: {
+            userGroupRoles: {
               select: {
-                id: true,
+                user: {
+                  select: {
+                    id: true,
+                  }
+                }
               },
+              where: {
+                name: {
+                  in: [UserGroupRoleNames.MEMBER, UserGroupRoleNames.ADMIN],
+                }
+              }
             },
           },
         });
 
-        const memberIdsArray = memberIds?.members.map((member) => member.id) || [];
+        const memberIdsArray = (memberIds?.userGroupRoles.map((userGroupRole) => userGroupRole?.user?.id) || []).filter((id): id is string => !!id);
         if (memberIdsArray.length === 0) throw new Error("No members in group");
 
         const results = await prisma.gameScore.findMany({
@@ -247,7 +249,7 @@ export const groupRouter = createTRPCRouter({
         let startDate = startOfDay(fromDate);
         let endDate = endOfDay(fromDate);
 
-        while (endDate.getTime() + 1 <= toDate.getTime()) {
+        while (endDate.getTime() <= toDate.getTime()) {
           const formattedStartDate = format(startDate, "dd.MM.yyyy");
           if (!myResultsObject[formattedStartDate]) myResultsObject[formattedStartDate] = {};
           if (!bestResultsObject[formattedStartDate]) bestResultsObject[formattedStartDate] = {};
@@ -299,5 +301,155 @@ export const groupRouter = createTRPCRouter({
           bestResults: bestResultsObject,
         };
       }),
+      create: protectedProcedure
+      .input(createGroupShape)
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.session.user.id;
+        if (!userId) throw new Error("User not found");
 
+        const group = await prisma.userGroup.create({
+          data: {
+            name: input.name,
+            userGroupRoles: {
+              create: {
+                user: {
+                  connect: {
+                    id: userId,
+                  },
+                },
+                name: UserGroupRoleNames.ADMIN,
+              },
+            },
+          },
+        });
+
+        return { group };
+      }),
+      autocompleteAddUser: protectedProcedure
+      .input(autocompleteAddUserShape)
+      .mutation(async ({ input, ctx }) => {
+        const { inputValue, id } = input;
+        const userId = ctx.session.user.id;
+        if (!userId) throw new Error("User not found");
+
+        const users = await prisma.user.findMany({
+          where: {
+            AND: [
+              {
+                OR: [
+                  { username: { contains: inputValue } },
+                  { email: { contains: inputValue } },
+                ],
+              },
+              {
+                NOT: {
+                  userGroupRoles: {
+                    some: {
+                      userGroupId: id,
+                    },
+                  },
+                },
+              },
+            ],
+          },
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            bgColor: true,
+            email: true,
+          },
+          take: 3,
+        });
+
+        console.log(users);
+
+        if (!users) throw new Error("User not found");
+
+        return { users };
+      }),
+    addUserToGroup: protectedProcedure
+      .input(addUserToGroupShape)
+      .mutation(async ({ input, ctx }) => {
+        const { id, userId, role } = input;
+        const currentUserId = ctx.session.user.id;
+        if (!currentUserId) throw new Error("User not found");
+
+        const conflictingRole = await prisma.userGroupRole.findFirst({
+          where: {
+            userGroupId: id,
+            userId: userId,
+          },
+        });
+        console.log(conflictingRole);
+        if (conflictingRole) throw new Error("User already added");
+
+        const userGroupRole = await prisma.userGroupRole.create({
+          data: {
+            user: {
+              connect: {
+                id: userId,
+              },
+            },
+            userGroup: {
+              connect: {
+                id,
+              },
+            },
+            name: role,
+          },
+        });
+
+        return { userGroupRole };
+      }),
+      inviteUserToUserGroup: protectedProcedure
+      .input(inviteUserToGroupShape)
+      .mutation(async ({ input, ctx }) => {
+        const { id, email } = input;
+        const currentUserId = ctx.session.user.id;
+        if (!currentUserId) throw new Error("User not found");
+
+        const conflictingUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { username: email },
+              { email: email },
+            ],
+          },
+        });
+        if (conflictingUser) throw new Error("User already exists");
+
+        const conflictingUserGroupRole = await prisma.userGroupRole.findFirst({
+          where: {
+            userGroupId: id,
+            OR: [
+              { user: { username: email } },
+              { user: { email: email } },
+              { userInvitation: { email: email } },
+            ],
+          },
+        });
+        if (conflictingUserGroupRole) throw new Error("Invitation already exists");
+
+
+        const role = await prisma.userGroupRole.create({
+          data: {
+            name: UserGroupRoleNames.PENDING,
+            userGroup: {
+              connect: {
+                id,
+              },
+            },
+            userInvitation: {
+              create: {
+                email,
+              },
+            },
+          }
+        });
+        // TODO: send email to email
+
+        return { userGroupRole: role };
+      }),
 });

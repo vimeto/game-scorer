@@ -1,7 +1,6 @@
+import { UserGroupRoleNames } from "../../../entities/types";
 import { prisma } from "../../db";
-
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-
 
 export const cardsRouter = createTRPCRouter({
   getStreakAndGroupsCount: protectedProcedure
@@ -31,7 +30,13 @@ export const cardsRouter = createTRPCRouter({
           },
           _count: {
             select: {
-              userGroups: true,
+              userGroupRoles: {
+                where: {
+                  name: {
+                    in: [UserGroupRoleNames.ADMIN, UserGroupRoleNames.MEMBER],
+                  }
+                }
+              },
             },
           }
         },
@@ -49,8 +54,8 @@ export const cardsRouter = createTRPCRouter({
         streak = gameScores[0].streak;
       }
 
-      const friendGroups = _count.userGroups;
+      const userGroups = _count.userGroupRoles;
 
-      return { streak, friendGroups };
+      return { streak, userGroups };
     }),
 });

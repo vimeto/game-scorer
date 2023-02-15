@@ -93,7 +93,7 @@ export const userRouter = createTRPCRouter({
           throw new Error("User not found");
         }
 
-        const profilePictureBackgroundColor = `hsl(${Math.round((360 * Math.random()))}, ${(25 + 70 * Math.random()).toFixed(2)}%, ${(85 + 10 * Math.random()).toFixed(2)}%)`;
+        // const profilePictureBackgroundColor = `hsl(${Math.round((360 * Math.random()))}, ${(25 + 70 * Math.random()).toFixed(2)}%, ${(85 + 10 * Math.random()).toFixed(2)}%)`;
 
         return {
           id: user.id,
@@ -101,7 +101,7 @@ export const userRouter = createTRPCRouter({
           lastName: user.lastName,
           email: user.email,
           username: user.username,
-          pictureBackgroundColor: profilePictureBackgroundColor,
+          bgColor: user.bgColor ?? "#ff0000",
         };
       }),
 });

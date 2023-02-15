@@ -3,6 +3,7 @@
 
 generator client {
     provider = "prisma-client-js"
+    previewFeatures = ["filteredRelationCount"]
 }
 
 datasource db {
@@ -49,21 +50,38 @@ model User {
     bgColor        String?
     accounts       Account[]
     sessions       Session[]
-    userGroups     UserGroup[]
     gameScores     GameScore[]
 
-    updatedAt DateTime @updatedAt
-    createdAt DateTime @default(now())
+    updatedAt      DateTime        @updatedAt
+    createdAt      DateTime        @default(now())
+    userGroupRoles UserGroupRole[]
 }
 
 model UserGroup {
-    id      String @id @default(cuid())
-    name    String
-    members User[]
+    id   String @id @default(cuid())
+    name String
 
-    updatedAt DateTime @updatedAt
-    createdAt DateTime @default(now())
+    updatedAt      DateTime        @updatedAt
+    createdAt      DateTime        @default(now())
     // consider adding game relation here, if thinking about restricting access to games
+    userGroupRoles UserGroupRole[]
+}
+
+model UserGroupRole {
+    id               String          @id @default(cuid())
+    name             String // admin, member, pending
+    userGroup        UserGroup       @relation(fields: [userGroupId], references: [id])
+    userGroupId      String
+    user             User?           @relation(fields: [userId], references: [id])
+    userId           String?
+    userInvitation   UserInvitation? @relation(fields: [userInvitationId], references: [id])
+    userInvitationId String?
+}
+
+model UserInvitation {
+    id             String          @id @default(cuid())
+    email          String
+    userGroupRoles UserGroupRole[]
 }
 
 model Game {

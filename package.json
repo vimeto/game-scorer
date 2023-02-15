@@ -22,6 +22,7 @@
     "date-fns": "^2.29.3",
     "framer-motion": "^9.0.2",
     "jsonwebtoken": "^9.0.0",
+    "lodash.debounce": "^4.0.8",
     "next": "13.1.6",
     "next-auth": "^4.19.0",
     "nodemailer": "^6.9.1",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/jsonwebtoken": "^9.0.1",
+    "@types/lodash.debounce": "^4.0.7",
     "@types/node": "^18.11.18",
     "@types/nodemailer": "^6.4.7",
     "@types/prettier": "^2.7.2",

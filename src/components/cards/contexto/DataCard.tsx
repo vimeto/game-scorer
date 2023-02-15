@@ -1,3 +1,4 @@
+import { getContextoIdentifier } from "../../../entities/contextoHelper";
 import { type ContextoData } from "../../../entities/types";
 
 interface DataCardProps {
@@ -11,7 +12,7 @@ const DataCard: React.FC<DataCardProps> = ({ data, setUpdatePanelOpen, updatePan
     return (
       <div className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex flex-col items-center w-[250px] p-2 rounded gap-2">
         <h3 className="text-2xl text-center">Contexto</h3>
-        <h3 className="text-md text-center">No data yet for #xxx</h3>
+        <h3 className="text-md text-center">No data yet for #{getContextoIdentifier()}</h3>
         <div
           onClick={() => setUpdatePanelOpen(!updatePanelOpen)}
           className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex space-between gap-4 px-6 py-2 rounded-full hover:gap-6 transition-all cursor-pointer">

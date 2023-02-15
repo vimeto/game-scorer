@@ -1,4 +1,5 @@
 import { getOuterStrokeStyle } from "../../entities/streakCardHelper";
+import FlexCard from "./FlexCard";
 
 // list six soft colors from bad to good
 const colors = [
@@ -16,7 +17,7 @@ const getStrokeColor = (fraction: number) => (
 
 const StreakCard: React.FC<{ streak: number, maxStreak: number }> = ({ streak, maxStreak }) => {
   return (
-    <div className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex flex-col items-center max-w-[250px] p-2 rounded gap-2">
+    <FlexCard>
       <h3 className="text-2xl text-center">Streak</h3>
       <div className="w-[150px] h-[150px] relative -mb-[60px]">
         <svg className="w-[150px] h-[150px] origin-center rotate-[170deg] absolute top-0 left-0">
@@ -47,7 +48,7 @@ const StreakCard: React.FC<{ streak: number, maxStreak: number }> = ({ streak, m
         <p className="text-center absolute top-[50px] left-1/2 -translate-x-1/2 mx-auto text-3xl">{streak}</p>
       </div>
       <p className="text-center">{streak >= maxStreak ? `You have played ${streak} consecutive days!` : `Play ${maxStreak - streak} more days to get a crown in your profile picture`}</p>
-    </div>
+    </FlexCard>
   );
 };
 

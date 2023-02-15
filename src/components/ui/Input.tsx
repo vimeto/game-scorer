@@ -1,4 +1,4 @@
-import { type InputTypes } from "../types";
+import { type InputTypes } from "../../entities/types";
 
 const Input: React.FC<InputTypes> = ({ valid, id, placeholder, title, value, setValue }) => {
   const inputClassName = () => {

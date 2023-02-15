@@ -57,6 +57,25 @@ interface GroupResultType {
   }
 }
 
+enum UserGroupRoleNames {
+  ADMIN = "admin",
+  MEMBER = "member",
+  PENDING = "pending",
+}
+
+enum GameNames {
+  WORDLE = "Wordle",
+  CONTEXTO = "Contexto",
+}
+
+interface InputTypes {
+  valid: boolean;
+  id: string;
+  placeholder: string;
+  title: string;
+  value: string;
+  setValue: (value: string) => void;
+}
 
 export {
   type WordleData,
@@ -64,5 +83,8 @@ export {
   type ContextoData,
   type GroupedUserGroupScoreValueTypes,
   type GroupResultType,
+  UserGroupRoleNames,
+  GameNames,
+  type InputTypes,
   // ContextoEmojiMap,
 }

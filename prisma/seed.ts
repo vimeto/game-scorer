@@ -1,5 +1,10 @@
-import { prisma } from '../src/server/db';
+// import { prisma } from '../src/server/db';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
 import bcryptjs from 'bcryptjs';
+import { GameNames, UserGroupRoleNames } from '../src/entities/types';
+
 
 const userDatas = [
   {
@@ -50,31 +55,42 @@ const seedUserGroups = async () => {
   const userGroupName = "Group 1";
   const user1 = await prisma.user.findUnique({
     where: { username: userDatas[0].username },
-    include: { userGroups: { select: { name: true } } },
+    include: {
+      userGroupRoles: {
+        include: { userGroup: { select: { name: true } } },
+      },
+    },
   });
   const user2 = await prisma.user.findUnique({
     where: { username: userDatas[1].username },
-    include: { userGroups: { select: { name: true } } },
+    include: {
+      userGroupRoles: {
+        include: { userGroup: { select: { name: true } } },
+      },
+    },
   });
   if (!user1 || !user2 ||
-      user1.userGroups.find(ug => ug.name === userGroupName) ||
-      user2.userGroups.find(ug => ug.name === userGroupName))  {
+      user1.userGroupRoles.find(ugr => ugr.userGroup.name === userGroupName) ||
+      user2.userGroupRoles.find(ugr => ugr.userGroup.name === userGroupName))  {
       return;
     }
 
   await prisma.userGroup.create({
     data: {
       name: userGroupName,
-      members: {
-        connect: [{ id: user1.id }, { id: user2.id }],
+      userGroupRoles: {
+        create: [
+          { name: UserGroupRoleNames.ADMIN, user: { connect: { id: user1.id } } },
+          { name: UserGroupRoleNames.ADMIN, user: { connect: { id: user2.id } } },
+        ]
       },
     },
   });
 }
 
 const seedGames = async () => {
-  const wordleName = "Wordle";
-  const contextoName = "Contexto";
+  const wordleName = GameNames.WORDLE;
+  const contextoName = GameNames.CONTEXTO;
   await prisma.game.upsert({
     where: { name: wordleName },
     update: {},

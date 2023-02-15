@@ -2,7 +2,9 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { GroupedUserGroupScoreValueTypes } from "../../../entities/types";
 import { api } from "../../../utils/api";
+import FlipCard from "../../FlipCard";
 import CircularBadge from "../../ui/CircularBadge";
+import FlexCard from "../../ui/FlexCard";
 
 // const groups = [
 //   {
@@ -51,12 +53,14 @@ const GroupCards: React.FC<GroupCardsProps> = ({ groups, isLoading, isError }) =
 
   return (
     <div
-      className="grid grid-cols-1 grid-flow-row sm:grid-cols-2 gap-2 justify-items-center justify-center items-start pt-16 sm:w-[508px] mx-auto w-auto"
+      className="text-center pt-16 max-w-screen-sm mx-auto w-auto"
+      // className="grid grid-cols-1 grid-flow-row sm:grid-cols-2 gap-2 justify-items-center justify-center items-start pt-16 sm:w-[508px] mx-auto w-auto"
       >
       {groups && Object.keys(groups).map((groupId, index) => (
-        <div key={index} className="bg-gray-300/10 text-white hover:bg-gray-100/10 p-2 rounded w-[250px]">
+        <FlexCard key={index}>
+        {/* <div key={index} className="bg-gray-300/10 text-white hover:bg-gray-100/10 p-2 rounded w-[250px]"> */}
           <h3 className="text-2xl text-center">{groups[groupId]?.name}</h3>
-          <div className="flex flex-row justify-between items-center gap-1">
+          <div className="flex flex-row justify-between items-center gap-1 text-left">
             <div>
               <div className="flex flex-row items-center gap-2 pt-1">
                 <CircularBadge width={'w-6'} height={'h-6'} bgColor={'amber-300'} textColor={'amber-600'}>C</CircularBadge>{" "}
@@ -74,7 +78,7 @@ const GroupCards: React.FC<GroupCardsProps> = ({ groups, isLoading, isError }) =
               →
             </div>
           </div>
-        </div>
+        </FlexCard>
       ))}
     </div>
   );

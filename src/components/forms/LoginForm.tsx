@@ -3,7 +3,6 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { api } from "../../utils/api";
 import { LoginInput } from "../ui/LoginInput";
 
 type LoginFormValues = {

@@ -1,4 +1,4 @@
-import React, { type ReactNode, useState } from 'react';
+import React, { type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 
 const cardVariants = {
@@ -41,10 +41,8 @@ const item = {
   },
 }
 
-const FlipCard: React.FC<{ shown: ReactNode, hidden: ReactNode, selected: boolean, setSelected: (a: boolean) => void }> = ({ shown, hidden, selected, setSelected }) => {
+const FlipCard: React.FC<{ shown: ReactNode, hidden: ReactNode, selected: boolean, setSelected: (a: boolean) => void }> = ({ shown, hidden, selected }) => {
     // const [selected, setSelected] = useState(false);
-
-    const onCardPress = () => { setSelected(!selected) }
 
     return (
       <>

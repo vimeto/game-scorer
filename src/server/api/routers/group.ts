@@ -1,7 +1,6 @@
 import { addDays, endOfDay, format, startOfDay } from "date-fns";
-import { JSONValue } from "superjson/dist/types";
 import { z } from "zod";
-import { GameNames, GroupResultType, UserGroupRoleNames, type GroupedUserGroupScoreValueTypes } from "../../../entities/types";
+import { GameNames, type GroupResultType, UserGroupRoleNames, type GroupedUserGroupScoreValueTypes } from "../../../entities/types";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";

@@ -1,4 +1,4 @@
-import { JSONValue } from "superjson/dist/types";
+import { type JSONValue } from "superjson/dist/types";
 
 interface WordleData {
   id: number;

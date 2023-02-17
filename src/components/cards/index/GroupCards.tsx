@@ -1,8 +1,5 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { GroupedUserGroupScoreValueTypes } from "../../../entities/types";
-import { api } from "../../../utils/api";
-import FlipCard from "../../FlipCard";
+import { type GroupedUserGroupScoreValueTypes } from "../../../entities/types";
 import CircularBadge from "../../ui/CircularBadge";
 import FlexCard from "../../ui/FlexCard";
 

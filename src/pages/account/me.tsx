@@ -1,9 +1,8 @@
 // create a page with profile picture, username, email, and a button to logout
 
-import { InferGetServerSidePropsType, type GetServerSideProps } from "next";
-import { getSession, signOut, useSession } from "next-auth/react";
+import { type GetServerSideProps } from "next";
+import { getSession, signOut } from "next-auth/react";
 import ProfilePicture from "../../components/me/ProfilePicture";
-import StreakCard from "../../components/ui/StreakCard";
 import { api } from "../../utils/api";
 
 
@@ -16,16 +15,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 };
-
-const getOuterStrokeStyle = (radius: number, innerFraction: number, isInner = false, outerFraction = 5/9) => {
-  const percentage = isInner ? innerFraction * outerFraction : innerFraction;
-  const circumference = radius * 2 * Math.PI;
-  const offset = `${circumference - percentage * circumference}`;
-  return {
-    strokeDasharray: `${circumference} ${circumference}`,
-    strokeDashoffset: offset,
-  };
-}
 
 const MePage = ({ id }: { id: string }) => {
   // const session = useSession();

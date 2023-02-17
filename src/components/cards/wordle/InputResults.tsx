@@ -1,5 +1,5 @@
 import { TRPCClientError } from "@trpc/client";
-import { ChangeEvent, useEffect, useState } from "react";
+import { useState } from "react";
 import { type WordleData } from "../../../entities/types";
 import { api } from "../../../utils/api";
 import { LoginInput } from "../../ui/LoginInput";

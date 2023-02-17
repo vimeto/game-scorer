@@ -22,17 +22,17 @@ availableSecrets:
     env: 'DATABASE_URL'
   - versionName: projects/101525772135/secrets/wordexto-nextauth-secret/versions/1
     env: 'NEXTAUTH_SECRET'
-  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+  - versionName: projects/101525772135/secrets/wordexto-nextauth-url/versions/1
     env: 'NEXTAUTH_URL'
   - versionName: projects/101525772135/secrets/wordexto-email-secret/versions/1
     env: 'EMAIL_SECRET'
-  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+  - versionName: projects/101525772135/secrets/wordexto-email-host/versions/1
     env: 'EMAIL_HOST'
-  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+  - versionName: projects/101525772135/secrets/wordexto-email-port/versions/1
     env: 'EMAIL_PORT'
-  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+  - versionName: projects/101525772135/secrets/wordexto-email-user/versions/1
     env: 'EMAIL_USER'
   - versionName: projects/101525772135/secrets/wordexto-email-password/versions/1
     env: 'EMAIL_PASSWORD'
-  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+  - versionName: projects/101525772135/secrets/wordexto-email-from/versions/1
     env: 'EMAIL_FROM'

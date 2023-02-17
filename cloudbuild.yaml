@@ -5,17 +5,7 @@ steps:
   args:
     - -c
     - |
-      docker build -t gcr.io/$PROJECT_ID/game-scorer:$COMMIT_SHA -f=Dockerfile
-        --build-arg DATABASE_URL=$$DATABASE_URL
-        --build-arg NEXTAUTH_SECRET=$$NEXTAUTH_SECRET
-        --build-arg NEXTAUTH_URL=$$NEXTAUTH_URL
-        --build-arg EMAIL_SECRET=$$EMAIL_SECRET
-        --build-arg EMAIL_HOST=$$EMAIL_HOST
-        --build-arg EMAIL_PORT=$$EMAIL_PORT
-        --build-arg EMAIL_USER=$$EMAIL_USER
-        --build-arg EMAIL_PASSWORD=$$EMAIL_PASSWORD
-        --build-arg EMAIL_FROM=$$EMAIL_FROM
-        .
+      docker build -t gcr.io/$PROJECT_ID/game-scorer:$COMMIT_SHA -f=Dockerfile --build-arg DATABASE_URL=$$DATABASE_URL --build-arg NEXTAUTH_SECRET=$$NEXTAUTH_SECRET --build-arg NEXTAUTH_URL=$$NEXTAUTH_URL --build-arg EMAIL_SECRET=$$EMAIL_SECRET --build-arg EMAIL_HOST=$$EMAIL_HOST --build-arg EMAIL_PORT=$$EMAIL_PORT --build-arg EMAIL_USER=$$EMAIL_USER --build-arg EMAIL_PASSWORD=$$EMAIL_PASSWORD --build-arg EMAIL_FROM=$$EMAIL_FROM .
   secretEnv: ['DATABASE_URL', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL', 'EMAIL_SECRET', 'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD', 'EMAIL_FROM']
 # push
 - name: 'gcr.io/cloud-builders/docker'

@@ -1,0 +1,38 @@
+steps:
+# build
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - -c
+    - |
+      docker build -t gcr.io/$PROJECT_ID/game-scorer:$COMMIT_SHA -f=Dockerfile --build-arg DATABASE_URL=$$DATABASE_URL NEXTAUTH_SECRET=$$NEXTAUTH_SECRET NEXTAUTH_URL=$$NEXTAUTH_URL EMAIL_SECRET=$$EMAIL_SECRET EMAIL_HOST=$$EMAIL_HOST EMAIL_PORT=$$EMAIL_PORT EMAIL_USER=$$EMAIL_USER EMAIL_PASSWORD=$$EMAIL_PASSWORD EMAIL_FROM=$$EMAIL_FROM .
+  secretEnv: ['DATABASE_URL', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL', 'EMAIL_SECRET', 'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD', 'EMAIL_FROM']
+# push
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/game-scorer:$COMMIT_SHA']
+# Deploy
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'game-scorer', '--image', 'gcr.io/$PROJECT_ID/game-scorer:$COMMIT_SHA', '--region', 'europe-north1']
+images:
+- 'gcr.io/$PROJECT_ID/game-scorer:$COMMIT_SHA'
+availableSecrets:
+  secretManager:
+  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1
+    env: 'DATABASE_URL'
+  - versionName: projects/101525772135/secrets/wordexto-nextauth-secret/versions/1
+    env: 'NEXTAUTH_SECRET'
+  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+    env: 'NEXTAUTH_URL'
+  - versionName: projects/101525772135/secrets/wordexto-email-secret/versions/1
+    env: 'EMAIL_SECRET'
+  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+    env: 'EMAIL_HOST'
+  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+    env: 'EMAIL_PORT'
+  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+    env: 'EMAIL_USER'
+  - versionName: projects/101525772135/secrets/wordexto-email-password/versions/1
+    env: 'EMAIL_PASSWORD'
+  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1 # TODO: update this
+    env: 'EMAIL_FROM'

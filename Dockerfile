@@ -1,29 +1,42 @@
 FROM node:18 AS runner
+
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
+ARG NEXTAUTH_SECRET
+ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+
+ARG NEXTAUTH_URL
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+
+ARG EMAIL_SECRET
+ENV EMAIL_SECRET=$EMAIL_SECRET
+
+ARG EMAIL_HOST
+ENV EMAIL_HOST=$EMAIL_HOST
+
+ARG EMAIL_PORT
+ENV EMAIL_PORT=$EMAIL_PORT
+
+ARG EMAIL_USER
+ENV EMAIL_USER=$EMAIL_USER
+
+ARG EMAIL_PASSWORD
+ENV EMAIL_PASSWORD=$EMAIL_PASSWORD
+
+ARG EMAIL_FROM
+ENV EMAIL_FROM=$EMAIL_FROM
+
 WORKDIR /app
 
 COPY . .
 COPY package*.json ./
 
 RUN npm ci --legacy-peer-dep
-RUN ls -al
 
 ENV NODE_ENV production
 
 RUN npm run build
-
-# RUN npx prisma migrate deploy
-
-# RUN npm run seed
-
-# RUN addgroup --system --gid 1001 nodejs
-# RUN adduser --system --uid 1001 nextjs
-#
-# COPY --from=builder /app/public ./public
-#
-# COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-# COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-#
-# USER nextjs
 
 EXPOSE 3000
 

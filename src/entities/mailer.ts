@@ -31,7 +31,7 @@ const sendEmailRegistration = async (to: string, token: string) => {
   <a href="${env.NEXTAUTH_URL}/account/verify_email?emailToken=${token}">Verify</a>`;
   const mail = await send(to, subject, text, html);
 
-  console.log("mail sent");
+  return mail;
 }
 
 export { sendEmailRegistration };

@@ -37,7 +37,7 @@ const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdateP
 
   return (
     <div className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex flex-col items-center w-[250px] p-2 rounded gap-2">
-      <h3 className="text-xl text-center">Contexto</h3>
+      <h3 className="text-2xl text-center">Contexto</h3>
       <h3 className="text-md text-center">Input results for #{getContextoIdentifier()}</h3>
       {error && (
         <div className="bg-red-400/70 p-2 rounded outline-1 outline-red-400 outline w-full text-center">
@@ -49,6 +49,7 @@ const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdateP
         rows={8}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
+        placeholder="Input results here"
         />
       <LoginInput id={"comment"} type={"text"} placeholder={"Comment"} value={comment} onChange={e => setComment(e.target.value)} />
       <div

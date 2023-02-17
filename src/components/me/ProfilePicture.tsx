@@ -3,7 +3,7 @@ import { FaCrown } from 'react-icons/fa';
 const ProfilePicture: React.FC<{ backgroundColor: string, firstLetter: string, hasStreak: boolean }> = ({ backgroundColor, firstLetter, hasStreak }) => {
   return (
     <div className="relative">
-      <div style={{ backgroundColor: `${backgroundColor}99` }} className={`w-60 h-60 text-9xl font-semibold flex justify-center items-center rounded-full drop-shadow-2xl`}>
+      <div style={{ backgroundColor: `${backgroundColor}99` }} className={`w-60 h-60 text-9xl font-semibold flex justify-center items-center rounded-full drop-shadow-2xl text-white`}>
         {firstLetter}
       </div>
       {hasStreak && (

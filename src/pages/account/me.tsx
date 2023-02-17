@@ -53,7 +53,7 @@ const MePage = ({ id }: { id: string }) => {
   return (
     <div className="flex flex-col items-center pt-24 gap-4">
       {me.data.bgColor && me.data.firstName && (
-        <ProfilePicture backgroundColor={me.data.bgColor} firstLetter={me.data.firstName.slice(0, 1)} hasStreak={true} />
+        <ProfilePicture backgroundColor={me.data.bgColor} firstLetter={me.data.firstName.slice(0, 1)} hasStreak={false} />
       )}
       <h2 className="text-lg italic">{`@${me.data.username || ""}`}</h2>
       <h2 className="text-lg bg-[blue-600]">{`${me.data.firstName || ""} ${me.data.lastName || ""}`}</h2>

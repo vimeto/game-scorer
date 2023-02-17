@@ -13,6 +13,7 @@ const signUpShape = z.object({
   username: z.string(),
   password: z.string(),
   passwordConfirmation: z.string(),
+  color: z.string(),
 });
 
 // TODO: prob dont need id as it is in session
@@ -40,7 +41,7 @@ export const userRouter = createTRPCRouter({
       });
 
       if (conflictingUser) {
-        throw new Error("User with those credentials already exists");
+        throw new Error("User that username or email already exists");
       }
 
       const passwordDigest = await bcryptjs.hash(input.password, 10);
@@ -52,7 +53,8 @@ export const userRouter = createTRPCRouter({
           lastName: input.lastName,
           email: input.email,
           username: input.username,
-          passwordDigest
+          passwordDigest,
+          bgColor: input.color,
         },
       });
 
@@ -70,14 +72,19 @@ export const userRouter = createTRPCRouter({
         data: { emailHash },
       })
 
-      // send email
       const to = user.email;
       const token = emailHash;
-      await sendEmailRegistration(to, token);
-
-      // TODO: update the created message
-      return {
-        message: `User ${input.username} created`,
+      try {
+        await sendEmailRegistration(to, token);
+        return {
+          message: `User ${input.username} created`,
+        }
+      } catch (e) {
+        // TODO: use transactions
+        await prisma.user.delete({
+          where: { id: user.id },
+        });
+        throw e;
       }
     }),
     me: protectedProcedure

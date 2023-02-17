@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+#colorwheel {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 35px;
+  height: 35px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+#colorwheel::-webkit-color-swatch {
+  border-radius: 10px;
+  border: none;
+}
+#colorwheel::-moz-color-swatch {
+  border-radius: 10px;
+  border: none;
+}

@@ -44,7 +44,6 @@ const Index: NextPage = () => {
         </h1>
         <GroupCards groups={groups} isLoading={query.isLoading} isError={query.isError} />
       </div>
-      <div className="w-60 h-60"></div>
     </div>
   );
 };

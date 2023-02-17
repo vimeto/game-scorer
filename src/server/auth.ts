@@ -17,12 +17,14 @@ declare module "next-auth" {
     user?: {
       id?: string;
       username?: string | null;
+      bgColor?: string | null;
     } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
     id?: string;
     username?: string | null;
+    bgColor?: string | null;
   }
 }
 
@@ -30,6 +32,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     username?: string | null;
+    bgColor?: string | null;
   }
 }
 
@@ -43,6 +46,7 @@ export const authOptions: NextAuthOptions = {
       if (user?.id) {
         token.id = user.id;
         token.username = user.username;
+        token.bgColor = user.bgColor;
       }
       return token;
     },
@@ -50,6 +54,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token?.id) {
         session.user.id = token.id;
         session.user.username = token.username;
+        session.user.bgColor = token.bgColor;
       }
       return session;
     },
@@ -64,7 +69,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials,) {
         const zodCredentialType = z.object({ email: z.string(), password: z.string() });
         const zodCredentials = zodCredentialType.safeParse(credentials);
-        if (!zodCredentials.success) { return null; }
+        if (!zodCredentials.success) { return Promise.reject("Unable to parse input data"); }
 
         const { email, password } = zodCredentials.data;
         // TODO: update to only perform one query
@@ -90,9 +95,7 @@ export const authOptions: NextAuthOptions = {
         const correctPassword = await bcryptjs.compare(password, userPasswordDigest);
 
         if (correctPassword) return possibleUser;
-        else {
-          return Promise.reject("Incorrect password");
-        }
+        return Promise.reject(new Error("Incorrect password"));
       }
     }),
   ],

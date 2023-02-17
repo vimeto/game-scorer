@@ -18,7 +18,7 @@ images:
 - 'gcr.io/$PROJECT_ID/game-scorer:$COMMIT_SHA'
 availableSecrets:
   secretManager:
-  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/1
+  - versionName: projects/101525772135/secrets/wordexto-database-url/versions/2
     env: 'DATABASE_URL'
   - versionName: projects/101525772135/secrets/wordexto-nextauth-secret/versions/1
     env: 'NEXTAUTH_SECRET'

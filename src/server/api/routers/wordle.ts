@@ -114,7 +114,8 @@ export const wordleRouter = createTRPCRouter({
 
         return { data: { ...data, comment: input.comment } };
       } catch (e) {
-        throw new Error("Unable to save score");
+        const errorMessage = (e instanceof Error) ? e.message : "";
+        throw new Error("Unable to save score. Details: " + errorMessage);
       }
     }),
 });

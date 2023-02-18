@@ -17,6 +17,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 };
 
 const MePage = ({ id }: { id: string }) => {
+  console.log("this is the id: ", id);
   // const session = useSession();
   // const me = api.user.me.useQuery({ id: session.data?.user?.id || "" });
   const me = api.user.me.useQuery({ id });

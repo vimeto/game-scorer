@@ -23,7 +23,8 @@ const parseInput = (input: string): { data?: WordleData, error: string } => {
     if (match) {
       const [, id, x] = match;
       const identifier = Number(id) || 0;
-      if (identifier !== getWordleIdentifier()) throw new Error;
+      // if identifier is not todays or yesterdays wordle, throw error
+      if (identifier > getWordleIdentifier() + 1 || identifier < getWordleIdentifier() - 1) throw new Error;
 
       data.id = identifier;
       data.score = Number(x) || 0;

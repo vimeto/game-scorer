@@ -68,16 +68,37 @@ export const wordleRouter = createTRPCRouter({
       if (!data) throw new Error("Unable to parse input");
 
       try {
-        const previousScore = await prisma.gameScore.findFirst({
-          where: {
-            userId,
-            game: { name: GameNames.WORDLE },
-            identifier: data.id - 1,
-          },
-        });
+        const [previousScore, wordleGame] = await Promise.all([
+          await prisma.gameScore.findFirst({
+            where: {
+              userId,
+              game: { name: GameNames.WORDLE },
+              identifier: data.id - 1,
+            },
+          }),
+          await prisma.game.findFirst({
+            where: { name: GameNames.WORDLE },
+          }),
+        ]);
 
-        await prisma.gameScore.create({
-          data: {
+        if (!wordleGame) throw new Error("Unable to find game");
+
+        await prisma.gameScore.upsert({
+          where: {
+            gameId_userId_identifier: {
+              gameId: wordleGame.id,
+              userId: userId,
+              identifier: data.id,
+            }
+          },
+          update: {
+            score: data.score,
+            data: data.rows,
+            comment: input.comment,
+            identifier: data.id,
+            streak: previousScore ? previousScore.streak + 1 : 1,
+          },
+          create: {
             user: {
               connect: { id: userId },
             },
@@ -89,10 +110,9 @@ export const wordleRouter = createTRPCRouter({
             comment: input.comment,
             identifier: data.id,
             streak: previousScore ? previousScore.streak + 1 : 1,
-          }
+          },
         });
 
-        // update all streaks after this one with delay
         updateWordleStreaksWithDelay(prisma, userId, data.id).catch(e => console.error(e));
 
         return { data: { ...data, comment: input.comment } };

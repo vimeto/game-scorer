@@ -66,24 +66,38 @@ export const contextoRouter = createTRPCRouter({
       if (error.length > 0) throw new Error(error);
       if (!data) throw new Error("Unable to parse input");
 
-      // const beginningOfYesterday = new Date();
-      // beginningOfYesterday.setDate(beginningOfYesterday.getDate() - 1);
-      // beginningOfYesterday.setHours(0, 0, 0, 0);
-      // const endOfYesterday = new Date();
-      // endOfYesterday.setDate(endOfYesterday.getDate() - 1);
-      // endOfYesterday.setHours(23, 59, 59, 999);
-
       try {
-        const yesterdayScore = await prisma.gameScore.findFirst({
-          where: {
-            userId,
-            game: { name: GameNames.CONTEXTO },
-            identifier: data.id - 1,
-          },
-        });
+        const [yesterdayScore, contextoGame] = await Promise.all([
+          prisma.gameScore.findFirst({
+            where: {
+              userId,
+              game: { name: GameNames.CONTEXTO },
+              identifier: data.id - 1,
+            },
+          }),
+          prisma.game.findFirst({
+            where: { name: GameNames.CONTEXTO },
+          }),
+        ]);
 
-        await prisma.gameScore.create({
-          data: {
+        if (!contextoGame) throw new Error("Unable to find game");
+
+        await prisma.gameScore.upsert({
+          where: {
+            gameId_userId_identifier: {
+              gameId: contextoGame.id,
+              userId: userId,
+              identifier: data.id,
+            }
+          },
+          update: {
+            score: data.score,
+            data: data.scores,
+            comment: input.comment,
+            identifier: data.id,
+            streak: yesterdayScore ? yesterdayScore.streak + 1 : 1,
+          },
+          create: {
             user: {
               connect: { id: userId },
             },
@@ -102,7 +116,15 @@ export const contextoRouter = createTRPCRouter({
 
         return { data: { ...data, comment: input.comment } };
       } catch (e) {
-        throw new Error("Unable to save score");
+        let errorMessage = "Unable to save score";
+        if (e instanceof Error) {
+          errorMessage = e.message;
+        }
+        else if (typeof e === "string") {
+          errorMessage = e;
+        }
+
+        throw new Error(errorMessage);
       }
     }),
 });

@@ -85,7 +85,7 @@ export const wordleRouter = createTRPCRouter({
 
         await prisma.gameScore.upsert({
           where: {
-            gameId_userId_identifier: {
+            userId_identifier_gameId: {
               gameId: wordleGame.id,
               userId: userId,
               identifier: data.id,

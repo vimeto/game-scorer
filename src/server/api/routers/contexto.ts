@@ -84,7 +84,7 @@ export const contextoRouter = createTRPCRouter({
 
         await prisma.gameScore.upsert({
           where: {
-            gameId_userId_identifier: {
+            userId_identifier_gameId: {
               gameId: contextoGame.id,
               userId: userId,
               identifier: data.id,

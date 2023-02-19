@@ -1,27 +1,11 @@
 // create a page with profile picture, username, email, and a button to logout
 
-import { type GetServerSideProps } from "next";
-import { getSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import ProfilePicture from "../../components/me/ProfilePicture";
 import { api } from "../../utils/api";
 
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  return {
-    props: {
-      id: String(session?.user?.id) || ""
-    }
-  }
-};
-
-const MePage = ({ id }: { id: string }) => {
-  console.log("this is the id: ", id);
-  // const session = useSession();
-  // const me = api.user.me.useQuery({ id: session.data?.user?.id || "" });
-  const me = api.user.me.useQuery({ id });
-  console.log(me.data);
+const MePage = () => {
+  const me = api.user.me.useQuery();
 
   if (me.isLoading || !me.data) {
     return <p>loading...</p>

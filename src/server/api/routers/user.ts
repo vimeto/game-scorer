@@ -16,11 +16,6 @@ const signUpShape = z.object({
   color: z.string(),
 });
 
-// TODO: prob dont need id as it is in session
-const meShape = z.object({
-  id: z.string().min(1),
-});
-
 export const userRouter = createTRPCRouter({
   create: publicProcedure
     .input(signUpShape)
@@ -88,27 +83,25 @@ export const userRouter = createTRPCRouter({
       }
     }),
     me: protectedProcedure
-      .input(meShape)
-      .query(async ({ input }) => {
-        const user = await prisma.user.findUnique({
-          where: {
-            id: input.id,
-          },
-        });
+    .query(async ({ ctx }) => {
+      const userId = ctx.session.user.id;
+      if (!userId) throw new Error("User not found");
 
-        if (!user) {
-          throw new Error("User not found");
-        }
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
 
-        // const profilePictureBackgroundColor = `hsl(${Math.round((360 * Math.random()))}, ${(25 + 70 * Math.random()).toFixed(2)}%, ${(85 + 10 * Math.random()).toFixed(2)}%)`;
+      if (!user) throw new Error("User not found");
 
-        return {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          username: user.username,
-          bgColor: user.bgColor ?? "#ff0000",
-        };
-      }),
+      return {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        username: user.username,
+        bgColor: user.bgColor ?? "#ff0000",
+      };
+    }),
 });

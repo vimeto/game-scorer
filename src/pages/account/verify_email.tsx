@@ -12,6 +12,7 @@ const isValid = (token: string, email: string, userId: string) => {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
+  // TODO: update this to a TRPC query, with error and success messages
   const emailToken = String(context.query.emailToken) || "invalid";
 
   let user = await prisma.user.findUnique({ where: { emailHash: emailToken } });

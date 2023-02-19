@@ -1,8 +1,13 @@
 import { z } from "zod";
-import { parseInput } from "../../../entities/wordleHelper";
+import { GameNames } from "../../../entities/types";
+import { parseInput, updateWordleStreaksWithDelay } from "../../../entities/wordleHelper";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const getShape = z.object({
+  identifier: z.number(),
+});
 
 const updateScore = z.object({
   data: z.string(),
@@ -11,25 +16,17 @@ const updateScore = z.object({
 
 export const wordleRouter = createTRPCRouter({
   get: protectedProcedure
-    .query(async ({ ctx }) => {
+    .input(getShape)
+    .query(async ({ ctx, input }) => {
+      const { identifier } = input;
       const userId = ctx.session.user.id;
       if (!userId) throw new Error("User not found");
-
-      const beginningOfToday = new Date();
-      beginningOfToday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
 
       const wordleScore = await prisma.gameScore.findFirst({
         where: {
           userId,
-          game: {
-            name: "Wordle",
-          },
-          createdAt: {
-            gte: beginningOfToday,
-            lte: endOfToday,
-          },
+          game: { name: GameNames.WORDLE },
+          identifier,
         },
       });
 
@@ -46,18 +43,18 @@ export const wordleRouter = createTRPCRouter({
 
       console.log(wordleScore);
 
-      const a = wordleShape.safeParse({
-        id: Number(wordleScore.identifier),
+      const parsedWordleData = wordleShape.safeParse({
+        id: wordleScore.identifier,
         score: wordleScore.score,
         rows: wordleScore.data,
         comment: wordleScore.comment,
       });
 
-      if (!a.success) {
+      if (!parsedWordleData.success) {
         throw new Error("Unable to parse data");
       }
 
-      return { data: a.data };
+      return { data: parsedWordleData.data };
   }),
   update: protectedProcedure
     .input(updateScore)
@@ -66,56 +63,49 @@ export const wordleRouter = createTRPCRouter({
       if (!userId) throw new Error("User not found");
 
       const { data, error } = parseInput(input.data);
-
       if (error.length > 0) throw new Error(error);
+
       if (!data) throw new Error("Unable to parse input");
 
-      const yesterdayStartOfDay = new Date();
-      yesterdayStartOfDay.setDate(yesterdayStartOfDay.getDate() - 1);
-      yesterdayStartOfDay.setHours(0, 0, 0, 0);
-      const yesterdayEndOfDay = new Date();
-      yesterdayEndOfDay.setDate(yesterdayEndOfDay.getDate() - 1);
-      yesterdayEndOfDay.setHours(23, 59, 59, 999);
-
       try {
-        const yesterdayScore = await prisma.gameScore.findFirst({
+        const previousScore = await prisma.gameScore.findFirst({
           where: {
             userId,
-            game: {
-              name: "Wordle",
-            },
-            date: {
-              gte: yesterdayStartOfDay,
-              lte: yesterdayEndOfDay,
-            }
+            game: { name: GameNames.WORDLE },
+            identifier: data.id - 1,
           },
         });
 
         await prisma.gameScore.create({
           data: {
             user: {
-              connect: {
-                id: userId,
-              }
+              connect: { id: userId },
             },
             game: {
-              connect: {
-                name: "Wordle",
-              },
+              connect: { name: GameNames.WORDLE },
             },
             score: data.score,
             data: data.rows,
             comment: input.comment,
-            identifier: String(data.id) || "",
-            date: new Date(),
-            streak: yesterdayScore ? yesterdayScore.streak + 1 : 1,
+            identifier: data.id,
+            streak: previousScore ? previousScore.streak + 1 : 1,
           }
         });
 
+        // update all streaks after this one with delay
+        updateWordleStreaksWithDelay(prisma, userId, data.id).catch(e => console.error(e));
+
         return { data: { ...data, comment: input.comment } };
       } catch (e) {
-        const errorMessage = (e instanceof Error) ? e.message : "";
-        throw new Error("Unable to save score. Details: " + errorMessage);
+        let errorMessage = "Unable to save score";
+        if (e instanceof Error) {
+          errorMessage = e.message;
+        }
+        else if (typeof e === "string") {
+          errorMessage = e;
+        }
+
+        throw new Error(errorMessage);
       }
     }),
 });

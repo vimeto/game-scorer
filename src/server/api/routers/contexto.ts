@@ -1,8 +1,13 @@
 import { z } from "zod";
-import { parseInput } from "../../../entities/contextoHelper";
+import { parseInput, updateContextoStreaksWithDelay } from "../../../entities/contextoHelper";
+import { GameNames } from "../../../entities/types";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const getShape = z.object({
+  identifier: z.number(),
+});
 
 const updateScore = z.object({
   data: z.string(),
@@ -11,25 +16,17 @@ const updateScore = z.object({
 
 export const contextoRouter = createTRPCRouter({
   get: protectedProcedure
-    .query(async ({ ctx }) => {
+    .input(getShape)
+    .query(async ({ ctx, input }) => {
+      const { identifier } = input;
       const userId = ctx.session.user.id;
       if (!userId) throw new Error("User not found");
-
-      const beginningOfToday = new Date();
-      beginningOfToday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
 
       const contextoScore = await prisma.gameScore.findFirst({
         where: {
           userId,
-          game: {
-            name: "Contexto",
-          },
-          createdAt: {
-            gte: beginningOfToday,
-            lte: endOfToday,
-          },
+          game: { name: GameNames.CONTEXTO },
+          identifier,
         },
       });
 
@@ -45,18 +42,18 @@ export const contextoRouter = createTRPCRouter({
       });
       if (!contextoScore) return { data: null };
 
-      const a = contextoShape.safeParse({
-        id: Number(contextoScore.identifier),
+      const parsedContextoData = contextoShape.safeParse({
+        id: contextoScore.identifier,
         score: contextoScore.score,
         scores: contextoScore.data,
         comment: contextoScore.comment,
       });
 
-      if (!a.success) {
+      if (!parsedContextoData.success) {
         throw new Error("Unable to parse data");
       }
 
-      return { data: a.data };
+      return { data: parsedContextoData.data };
   }),
   update: protectedProcedure
     .input(updateScore)
@@ -69,47 +66,39 @@ export const contextoRouter = createTRPCRouter({
       if (error.length > 0) throw new Error(error);
       if (!data) throw new Error("Unable to parse input");
 
-      const beginningOfYesterday = new Date();
-      beginningOfYesterday.setDate(beginningOfYesterday.getDate() - 1);
-      beginningOfYesterday.setHours(0, 0, 0, 0);
-      const endOfYesterday = new Date();
-      endOfYesterday.setDate(endOfYesterday.getDate() - 1);
-      endOfYesterday.setHours(23, 59, 59, 999);
+      // const beginningOfYesterday = new Date();
+      // beginningOfYesterday.setDate(beginningOfYesterday.getDate() - 1);
+      // beginningOfYesterday.setHours(0, 0, 0, 0);
+      // const endOfYesterday = new Date();
+      // endOfYesterday.setDate(endOfYesterday.getDate() - 1);
+      // endOfYesterday.setHours(23, 59, 59, 999);
 
       try {
         const yesterdayScore = await prisma.gameScore.findFirst({
           where: {
             userId,
-            // game: {
-            //   name: "Contexto",
-            // },
-            date: {
-              gte: beginningOfYesterday,
-              lte: endOfYesterday,
-            },
+            game: { name: GameNames.CONTEXTO },
+            identifier: data.id - 1,
           },
         });
 
         await prisma.gameScore.create({
           data: {
             user: {
-              connect: {
-                id: userId,
-              }
+              connect: { id: userId },
             },
             game: {
-              connect: {
-                name: "Contexto",
-              },
+              connect: { name: GameNames.CONTEXTO },
             },
             score: data.score,
             data: data.scores,
             comment: input.comment,
-            identifier: String(data.id) || "",
-            date: new Date(),
+            identifier: data.id,
             streak: yesterdayScore ? yesterdayScore.streak + 1 : 1,
           }
         });
+
+        updateContextoStreaksWithDelay(prisma, userId, data.id).catch(e => console.error(e));
 
         return { data: { ...data, comment: input.comment } };
       } catch (e) {

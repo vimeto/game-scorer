@@ -69,7 +69,7 @@ const GroupCards: React.FC<GroupCardsProps> = ({ groups, isLoading, isError }) =
               </div>
             </div>
             <div
-              className="leading-none text-5xl w-[60px] h-[60px] rounded-full bg-gray-300/10 text-white hover:bg-gray-100/10 flex items-center justify-center hover:scale-105 transition"
+              className="leading-none text-5xl w-[60px] h-[60px] rounded-full bg-gray-300/10 text-white hover:bg-gray-100/10 flex items-center justify-center hover:scale-105 transition cursor-pointer"
               onClick={() => { navigateToGroup(groupId).catch(e => console.error(e)) }}
               >
               →

@@ -1,6 +1,6 @@
-import { addDays, endOfDay, format, startOfDay } from "date-fns";
 import { z } from "zod";
-import { GameNames, type GroupResultType, UserGroupRoleNames, type GroupedUserGroupScoreValueTypes } from "../../../entities/types";
+import { GameNames, type GroupResultType, UserGroupRoleNames, type GroupedUserGroupScoreValueTypes, getContextoIdentifierFromWordleIdentifier } from "../../../entities/types";
+import { getDateFromWordleIdentifier } from "../../../entities/wordleHelper";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -13,14 +13,18 @@ type UserGroupQueryType = {
   score: number;
 }
 
+const getTodayIndexSelectionShape = z.object({
+  wordleIdentifier: z.number(),
+});
+
 const getGroupShape = z.object({
   id: z.string(),
 });
 
 const getWeekResultsShape = z.object({
   id: z.string(),
-  fromDate: z.date(),
-  toDate: z.date(),
+  fromWordleIdentifier: z.number(),
+  toWordleIdentifier: z.number(),
 })
 
 const createGroupShape = z.object({
@@ -47,19 +51,21 @@ const inviteUserToGroupShape = z.object({
 
 export const groupRouter = createTRPCRouter({
   getTodayIndexSelection: protectedProcedure
-    .query(async ({ ctx }) => {
+    .input(getTodayIndexSelectionShape)
+    .query(async ({ ctx, input }) => {
+      const { wordleIdentifier } = input;
       const userId = ctx.session.user.id;
       if (!userId) throw new Error("User not found");
 
       // const beginningOfYesterday = new Date();
       // beginningOfYesterday.setDate(beginningOfYesterday.getDate() - 1);
       // beginningOfYesterday.setHours(0, 0, 0, 0);
-      const beginningOfToday = new Date();
+      // const beginningOfToday = new Date();
       // beginningOfToday.setDate(beginningOfToday.getDate() - 4);
-      beginningOfToday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date();
+      // beginningOfToday.setHours(0, 0, 0, 0);
+      // const endOfToday = new Date();
       // endOfToday.setDate(endOfToday.getDate() - 4);
-      endOfToday.setHours(23, 59, 59, 999);
+      // endOfToday.setHours(23, 59, 59, 999);
 
       // const result = await prisma.$queryRaw<UserGroupQueryType[]>`
       //   SELECT Game.name AS gameName, UserGroup.id AS userGroupId, UserGroup.name AS userGroupName, u1.username AS username, MIN(GameScore.score) AS score
@@ -75,6 +81,8 @@ export const groupRouter = createTRPCRouter({
       //   ORDER BY MIN(GameScore.score) ASC;
       // `;
       //
+      const contextoIdentifier = getContextoIdentifierFromWordleIdentifier(wordleIdentifier);
+
       const result = await prisma.$queryRaw<UserGroupQueryType[]>`
         SELECT Game.name AS gameName, UserGroup.id AS userGroupId, UserGroup.name AS userGroupName, u1.username AS username, MIN(GameScore.score) AS score
         FROM UserGroup
@@ -84,9 +92,9 @@ export const groupRouter = createTRPCRouter({
         JOIN User u2 ON ugr2.userId = u2.id
         JOIN GameScore ON GameScore.userId = u1.id
         JOIN Game ON GameScore.gameId = Game.id
-        WHERE Game.name IN (${GameNames.CONTEXTO}, ${GameNames.WORDLE}) AND
-        u2.id = ${userId} AND GameScore.date >= ${beginningOfToday} AND
-        GameScore.date <= ${endOfToday} AND
+        WHERE ((Game.name = ${GameNames.CONTEXTO} AND GameScore.identifier = ${contextoIdentifier}) OR
+        (Game.name = ${GameNames.WORDLE} AND GameScore.identifier = ${wordleIdentifier})) AND
+        u2.id = ${userId} AND
         ugr1.name IN (${UserGroupRoleNames.ADMIN}, ${UserGroupRoleNames.MEMBER})
         GROUP BY Game.name, UserGroup.id, u1.id
         ORDER BY MIN(GameScore.score) ASC;
@@ -180,7 +188,7 @@ export const groupRouter = createTRPCRouter({
       .input(getWeekResultsShape)
       .query(async ({ input, ctx }) => {
         const userId = ctx.session.user.id;
-        const { fromDate, toDate, id } = input;
+        const { fromWordleIdentifier, toWordleIdentifier, id } = input;
         if (!userId) throw new Error("User not found");
 
         const memberIds = await prisma.userGroup.findUnique({
@@ -208,15 +216,28 @@ export const groupRouter = createTRPCRouter({
         const memberIdsArray = (memberIds?.userGroupRoles.map((userGroupRole) => userGroupRole?.user?.id) || []).filter((id): id is string => !!id);
         if (memberIdsArray.length === 0) throw new Error("No members in group");
 
+        // TODO: update this to use the new identifier approach
         const results = await prisma.gameScore.findMany({
           where: {
             userId: {
               in: memberIdsArray,
             },
-            date: {
-              gte: fromDate,
-              lte: toDate,
-            },
+            OR: [
+              {
+                game: { name: GameNames.CONTEXTO },
+                identifier: {
+                  gte: getContextoIdentifierFromWordleIdentifier(fromWordleIdentifier),
+                  lte: getContextoIdentifierFromWordleIdentifier(toWordleIdentifier),
+                }
+              },
+              {
+                game: { name: GameNames.WORDLE },
+                identifier: {
+                  gte: fromWordleIdentifier,
+                  lte: toWordleIdentifier,
+                }
+              }
+            ]
           },
           select: {
             userId: true,
@@ -230,7 +251,6 @@ export const groupRouter = createTRPCRouter({
             comment: true,
             data: true,
             identifier: true,
-            date: true,
             game: {
               select: {
                 name: true,
@@ -244,22 +264,22 @@ export const groupRouter = createTRPCRouter({
         const bestResultsObject: Record<string, GroupResultType> = {};
         // const bestResults: (GroupResultType & { date: string })[] = [];
 
+        let runningIdentifier = fromWordleIdentifier;
 
-        let startDate = startOfDay(fromDate);
-        let endDate = endOfDay(fromDate);
-
-        while (endDate.getTime() <= toDate.getTime()) {
-          const formattedStartDate = format(startDate, "dd.MM.yyyy");
-          if (!myResultsObject[formattedStartDate]) myResultsObject[formattedStartDate] = {};
-          if (!bestResultsObject[formattedStartDate]) bestResultsObject[formattedStartDate] = {};
+        while (runningIdentifier <= toWordleIdentifier) {
+          const formattedDate = getDateFromWordleIdentifier(runningIdentifier);
+          if (!myResultsObject[formattedDate]) myResultsObject[formattedDate] = {};
+          if (!bestResultsObject[formattedDate]) bestResultsObject[formattedDate] = {};
 
           const filteredResults = results.filter((result) => (
-            result.date.getTime() >= startDate.getTime() && result.date.getTime() <= endDate.getTime()))
+            (result.game.name === GameNames.WORDLE && result.identifier === runningIdentifier) ||
+            (result.game.name === GameNames.CONTEXTO && result.identifier === getContextoIdentifierFromWordleIdentifier(runningIdentifier))));
+
           filteredResults.forEach((result) => {
             if (result.userId === userId) {
-              if (!myResultsObject[formattedStartDate]) myResultsObject[formattedStartDate] = {};
-              if (result.game.name === "Wordle" || result.game.name === "Contexto") {
-                (myResultsObject[formattedStartDate] as GroupResultType)[result.game.name] = {
+              if (!myResultsObject[formattedDate]) myResultsObject[formattedDate] = {};
+              if (result.game.name === GameNames.WORDLE || result.game.name === GameNames.CONTEXTO) {
+                (myResultsObject[formattedDate] as GroupResultType)[result.game.name] = {
                   score: result.score,
                   comment: result.comment,
                   data: result.data,
@@ -269,11 +289,9 @@ export const groupRouter = createTRPCRouter({
                 };
               }
             }
-
-            if (!bestResultsObject[formattedStartDate]) bestResultsObject[formattedStartDate] = {};
-            if (result.game.name === "Wordle" || result.game.name === "Contexto") {
-              if (!(bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name] || ((bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name]?.score || 1000) > result.score) {
-                (bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name] = {
+            if (result.game.name === GameNames.WORDLE || result.game.name === GameNames.CONTEXTO) {
+              if (!(bestResultsObject[formattedDate] as GroupResultType)[result.game.name] || ((bestResultsObject[formattedDate] as GroupResultType)[result.game.name]?.score || 1000) > result.score) {
+                (bestResultsObject[formattedDate] as GroupResultType)[result.game.name] = {
                   score: result.score,
                   comment: result.comment,
                   data: result.data,
@@ -285,14 +303,59 @@ export const groupRouter = createTRPCRouter({
             }
           });
 
-          // #9ab8f7
+          runningIdentifier += 1;
 
-          // myResults.push({ ...myResultsObject[formattedStartDate], date: formattedStartDate });
-          // bestResults.push({ ...bestResultsObject[formattedStartDate], date: formattedStartDate });
-
-          startDate = addDays(startDate, 1);
-          endDate = addDays(endDate, 1);
         }
+
+
+        // let startDate = startOfDay(fromDate);
+        // let endDate = endOfDay(fromDate);
+
+        // while (endDate.getTime() <= toDate.getTime()) {
+        //   const formattedStartDate = format(startDate, "dd.MM.yyyy");
+        //   if (!myResultsObject[formattedStartDate]) myResultsObject[formattedStartDate] = {};
+        //   if (!bestResultsObject[formattedStartDate]) bestResultsObject[formattedStartDate] = {};
+
+        //   const filteredResults = results.filter((result) => (
+        //     result.date.getTime() >= startDate.getTime() && result.date.getTime() <= endDate.getTime()))
+        //   filteredResults.forEach((result) => {
+        //     if (result.userId === userId) {
+        //       if (!myResultsObject[formattedStartDate]) myResultsObject[formattedStartDate] = {};
+        //       if (result.game.name === "Wordle" || result.game.name === "Contexto") {
+        //         (myResultsObject[formattedStartDate] as GroupResultType)[result.game.name] = {
+        //           score: result.score,
+        //           comment: result.comment,
+        //           data: result.data,
+        //           username: result.user.username || "",
+        //           userBgColor: result.user.bgColor || "#ff0000",
+        //           identifier: result.identifier,
+        //         };
+        //       }
+        //     }
+
+        //     if (!bestResultsObject[formattedStartDate]) bestResultsObject[formattedStartDate] = {};
+        //     if (result.game.name === "Wordle" || result.game.name === "Contexto") {
+        //       if (!(bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name] || ((bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name]?.score || 1000) > result.score) {
+        //         (bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name] = {
+        //           score: result.score,
+        //           comment: result.comment,
+        //           data: result.data,
+        //           username: result.user.username || "",
+        //           userBgColor: result.user.bgColor || "#ff0000",
+        //           identifier: result.identifier,
+        //         };
+        //       }
+        //     }
+        //   });
+
+        //   // #9ab8f7
+
+        //   // myResults.push({ ...myResultsObject[formattedStartDate], date: formattedStartDate });
+        //   // bestResults.push({ ...bestResultsObject[formattedStartDate], date: formattedStartDate });
+
+        //   startDate = addDays(startDate, 1);
+        //   endDate = addDays(endDate, 1);
+        // }
 
 
         return {

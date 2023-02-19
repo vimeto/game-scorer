@@ -4,6 +4,7 @@ import { Fragment } from "react";
 import { type JSONValue } from "superjson/dist/types";
 import { z } from "zod";
 import { type GroupResultType, WordleEmojiMap } from "../../../entities/types";
+import { getWordleIdentifier } from "../../../entities/wordleHelper";
 import { api } from "../../../utils/api";
 
 const MyResultsWordleTooltipContent: React.FC<{ data: JSONValue | undefined, comment?: string | null }> = ({ data, comment }) => {
@@ -94,15 +95,23 @@ const MyResultsContextoCell: React.FC<{ data: GroupResultType["Contexto"] | unde
   );
 }
 
-const getDateObject: () => { fromDate: Date, toDate: Date } = () => {
-  const today = new Date();
-  const startDate = subDays(today, 6);
+// const getDateObject: () => { fromDate: Date, toDate: Date } = () => {
+//   const today = new Date();
+//   const startDate = subDays(today, 6);
 
-  return { fromDate: startOfDay(startDate), toDate: endOfDay(today) }
+//   return { fromDate: startOfDay(startDate), toDate: endOfDay(today) }
+// }
+const getInputObject = () => {
+  const toWordleIdentifier = getWordleIdentifier();
+  const fromWordleIdentifier = toWordleIdentifier - 6;
+  return {
+    fromWordleIdentifier,
+    toWordleIdentifier,
+  }
 }
 
 const ResultsCard: React.FC<{ id: string }> = ({ id }) => {
-  const query = api.group.weekResults.useQuery({ ...getDateObject(), id });
+  const query = api.group.weekResults.useQuery({ ...getInputObject(), id });
 
   if (query.isLoading || !query.data) return <div>Loading...</div>
   if (query.isError) return <div>Error :(</div>

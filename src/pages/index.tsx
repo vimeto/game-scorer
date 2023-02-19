@@ -8,10 +8,12 @@ import GroupCards from "../components/cards/index/GroupCards";
 import { useEffect, useState } from "react";
 import { type GroupedUserGroupScoreValueTypes } from "../entities/types";
 import { api } from "../utils/api";
+import { getWordleIdentifier } from "../entities/wordleHelper";
 
 const Index: NextPage = () => {
+  const wordleIdentifier = getWordleIdentifier();
   const [groups, setGroups] = useState<Record<string, GroupedUserGroupScoreValueTypes>>()
-  const query = api.group.getTodayIndexSelection.useQuery();
+  const query = api.group.getTodayIndexSelection.useQuery({ wordleIdentifier: wordleIdentifier });
 
   useEffect(() => {
     if (query.data?.resultsByUserGroup) setGroups(query.data.resultsByUserGroup);

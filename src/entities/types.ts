@@ -45,7 +45,7 @@ interface GroupResultType {
     data: JSONValue | null;
     username: string;
     userBgColor: string;
-    identifier: string;
+    identifier: number;
   };
   Contexto?: {
     score: number;
@@ -53,7 +53,7 @@ interface GroupResultType {
     data: JSONValue | null;
     username: string;
     userBgColor: string;
-    identifier: string;
+    identifier: number;
   }
 }
 
@@ -77,6 +77,10 @@ interface InputTypes {
   setValue: (value: string) => void;
 }
 
+const getContextoIdentifierFromWordleIdentifier = (wordleIdentifier: number) => {
+  return wordleIdentifier - 456;
+}
+
 export {
   type WordleData,
   WordleEmojiMap,
@@ -86,5 +90,6 @@ export {
   UserGroupRoleNames,
   GameNames,
   type InputTypes,
+  getContextoIdentifierFromWordleIdentifier,
   // ContextoEmojiMap,
 }

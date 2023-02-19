@@ -1,4 +1,6 @@
-import { WordleEmojiMap, type WordleData } from "./types";
+import { type PrismaClient } from ".prisma/client";
+import { format } from "date-fns";
+import { GameNames, WordleEmojiMap, type WordleData } from "./types";
 
 const getWordleIdentifier = () => {
   const wordleCreationDate = new Date("2021-06-19T00:00:00.000Z");
@@ -24,7 +26,7 @@ const parseInput = (input: string): { data?: WordleData, error: string } => {
       const [, id, x] = match;
       const identifier = Number(id) || 0;
       // if identifier is not todays or yesterdays wordle, throw error
-      if (identifier > getWordleIdentifier() + 1 || identifier < getWordleIdentifier() - 1) throw new Error;
+      // if (identifier > getWordleIdentifier() + 5 || identifier < getWordleIdentifier() - 5) throw new Error;
 
       data.id = identifier;
       data.score = Number(x) || 0;
@@ -85,7 +87,66 @@ const parseInput = (input: string): { data?: WordleData, error: string } => {
   }
 }
 
+const updateWordleStreaksWithDelay = async (prisma: PrismaClient, userId: string, fromIdentifier: number) => {
+  const wordleStreaks = await prisma.gameScore.findMany({
+    where: {
+      userId,
+      game: {
+        name: GameNames.WORDLE,
+      },
+      identifier: {
+        gte: fromIdentifier,
+      },
+    },
+    orderBy: {
+      identifier: "asc",
+    },
+  });
+
+  if (wordleStreaks.length <= 1 || !wordleStreaks[0]) return;
+
+  let runningStreak = wordleStreaks[0].streak;
+  let previousIdentifier = wordleStreaks[0].identifier;
+
+  // map every wordleStreak except the first one
+
+  const promises = wordleStreaks.slice(1).map(async (wordleStreak) => {
+    const identifier = wordleStreak.identifier;
+    const streak = wordleStreak.streak;
+    console.log(identifier, streak, runningStreak, previousIdentifier);
+    if (identifier - 1 === previousIdentifier) {
+      // TODO: simplify if statement
+      runningStreak += 1;
+      previousIdentifier = identifier;
+
+      await prisma.gameScore.update({
+        where: { id: wordleStreak.id },
+        data: { streak: runningStreak },
+      });
+    }
+    else {
+      runningStreak = 1;
+      previousIdentifier = identifier;
+
+      await prisma.gameScore.update({
+        where: { id: wordleStreak.id },
+        data: { streak: 1 },
+      });
+    }
+  });
+
+  await Promise.all(promises);
+}
+
+const getDateFromWordleIdentifier = (identifier: number) => {
+  const wordleCreationDate = new Date("2021-06-19T00:00:00.000Z");
+  const date = new Date(wordleCreationDate.getTime() + identifier * 1000 * 3600 * 24);
+  return format(date, 'dd.MM.yyyy');
+}
+
 export {
   parseInput,
   getWordleIdentifier,
+  updateWordleStreaksWithDelay,
+  getDateFromWordleIdentifier,
 }

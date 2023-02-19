@@ -96,12 +96,11 @@ model Game {
 
 model GameScore {
     id         String   @id @default(cuid())
-    identifier String
+    identifier Int
     score      Int
     data       Json
     comment    String?
     streak     Int
-    date       DateTime
     game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
     gameId     String
     user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)

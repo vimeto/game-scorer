@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { type WordleData } from "../entities/types";
+import { getWordleIdentifier } from "../entities/wordleHelper";
 import { api } from "../utils/api";
 import DataCard from "./cards/wordle/DataCard";
 import InputResults from "./cards/wordle/InputResults";
@@ -10,7 +11,8 @@ interface WordleCardProps {
 }
 
 const WordleCard: React.FC<WordleCardProps> = ({ refreshGroups }) => {
-  const query = api.wordle.get.useQuery();
+  const wordleIdentifier = getWordleIdentifier();
+  const query = api.wordle.get.useQuery({ identifier: wordleIdentifier });
 
   const [updatePanelOpen, setUpdatePanelOpen] = useState(false);
   const [data, setData] = useState<WordleData>();

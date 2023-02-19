@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { type ContextoData } from "../entities/types";
+import { getContextoIdentifierFromWordleIdentifier, type ContextoData } from "../entities/types";
+import { getWordleIdentifier } from "../entities/wordleHelper";
 import { api } from "../utils/api";
 import DataCard from "./cards/contexto/DataCard";
 import InputResults from "./cards/contexto/InputResults";
@@ -10,9 +11,10 @@ interface ContextoCardProps {
 }
 
 const ContextoCard: React.FC<ContextoCardProps> = ({ refreshGroups }) => {
-  const query = api.contexto.get.useQuery();
+  const wordleIdentifier = getWordleIdentifier();
+  const query = api.contexto.get.useQuery({ identifier: getContextoIdentifierFromWordleIdentifier(wordleIdentifier) });
 
-  const [updatePanelOpen, setUpdatePanelOpen] = useState(false);
+  const [updatePanelOpen, setUpdatePanelOpen] = useState(true);
   const [data, setData] = useState<ContextoData>();
 
   useEffect(() => {

@@ -12,49 +12,6 @@ interface InputResultsProps {
   refreshGroups: () => Promise<void>;
 }
 
-// {
-//   "Contexto": {
-//       "score": 8,
-//       "comment": "Another manually added",
-//       "data": {
-//           "red": 12,
-//           "green": 14,
-//           "yellow": 9
-//       },
-//       "username": "itsviivi"
-//   },
-//   "Wordle": {
-//       "score": 3,
-//       "comment": "Nice",
-//       "data": [
-//           [
-//               0,
-//               2,
-//               2,
-//               0,
-//               0
-//           ],
-//           [
-//               2,
-//               2,
-//               2,
-//               0,
-//               2
-//           ],
-//           [
-//               2,
-//               2,
-//               2,
-//               2,
-//               2
-//           ]
-//       ],
-//       "username": "vimetoivonen"
-//   },
-//   "date": "2023.02.10"
-// }
-
-
 const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdatePanelOpen, setData, refreshGroups }) => {
   const [inputValue, setInputValue] = useState("");
   const [comment, setComment] = useState("");

@@ -1,3 +1,4 @@
+import { getWordleIdentifier } from "../../../entities/wordleHelper";
 import { api } from "../../../utils/api";
 import FriendsCard from "../../ui/FriendsCard";
 import StreakCard from "../../ui/StreakCard";
@@ -7,7 +8,8 @@ interface HeaderCardsProps {
 }
 
 const HeaderCards: React.FC<HeaderCardsProps> = ({ refreshGroups }) => {
-  const query = api.cards.getStreakAndGroupsCount.useQuery();
+  const wordleIdentifier = getWordleIdentifier();
+  const query = api.cards.getStreakAndGroupsCount.useQuery({ wordleIdentifier });
 
   // TODO: add formatting to error and loading state
   if (query.isLoading) return <div>Loading...</div>;

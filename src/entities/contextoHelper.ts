@@ -1,4 +1,5 @@
-import { type ContextoData } from "./types";
+import { type PrismaClient } from ".prisma/client";
+import { GameNames, type ContextoData } from "./types";
 
 const getContextoIdentifier = () => {
   const contextoCreationDate = new Date("2022-09-18T00:00:00.000Z");
@@ -100,6 +101,55 @@ const parseInput = (input: string): { data?: ContextoData, error: string } => {
 
 }
 
+const updateContextoStreaksWithDelay = async (prisma: PrismaClient, userId: string, fromIdentifier: number) => {
+  const wordleStreaks = await prisma.gameScore.findMany({
+    where: {
+      userId,
+      game: { name: GameNames.CONTEXTO },
+      identifier: {
+        gte: fromIdentifier,
+      },
+    },
+    orderBy: {
+      identifier: "asc",
+    },
+  });
+
+  if (wordleStreaks.length <= 1 || !wordleStreaks[0]) return;
+
+  let runningStreak = wordleStreaks[0].streak;
+  let previousIdentifier = wordleStreaks[0].identifier;
+
+  // map every wordleStreak except the first one
+
+  const promises = wordleStreaks.slice(1).map(async (wordleStreak) => {
+    const identifier = wordleStreak.identifier;
+    const streak = wordleStreak.streak;
+    console.log(identifier, streak, runningStreak, previousIdentifier);
+    if (identifier - 1 === previousIdentifier) {
+      // TODO: simplify if statement
+      runningStreak += 1;
+      previousIdentifier = identifier;
+
+      await prisma.gameScore.update({
+        where: { id: wordleStreak.id },
+        data: { streak: runningStreak },
+      });
+    }
+    else {
+      runningStreak = 1;
+      previousIdentifier = identifier;
+
+      await prisma.gameScore.update({
+        where: { id: wordleStreak.id },
+        data: { streak: 1 },
+      });
+    }
+  });
+
+  await Promise.all(promises);
+}
+
 
 
 
@@ -118,4 +168,5 @@ const parseInput = (input: string): { data?: ContextoData, error: string } => {
 export {
   parseInput,
   getContextoIdentifier,
+  updateContextoStreaksWithDelay,
 }

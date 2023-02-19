@@ -1,32 +1,43 @@
-import { UserGroupRoleNames } from "../../../entities/types";
+import { z } from "zod";
+import { GameNames, getContextoIdentifierFromWordleIdentifier, UserGroupRoleNames } from "../../../entities/types";
 import { prisma } from "../../db";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
+const getStreakAndGroupsCountShape = z.object({
+  wordleIdentifier: z.number(),
+});
+
 export const cardsRouter = createTRPCRouter({
   getStreakAndGroupsCount: protectedProcedure
-    .query(async ({ ctx }) => {
+    .input(getStreakAndGroupsCountShape)
+    .query(async ({ ctx, input }) => {
+      const { wordleIdentifier } = input;
       const userId = ctx.session.user.id;
       if (!userId) throw new Error("User not found");
-
-      const beginningOfYesterday = new Date();
-      beginningOfYesterday.setDate(beginningOfYesterday.getDate() - 1);
-      beginningOfYesterday.setHours(0, 0, 0, 0);
-      const beginningOfToday = new Date();
-      beginningOfToday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
 
       const userWithTodayScoreAndGroups = await prisma.user.findUnique({
         where: { id: userId },
         include: {
           gameScores: {
             where: {
-              date: {
-                gte: beginningOfYesterday,
-                lte: endOfToday,
-              },
+              OR: [
+                {
+                  game: { name: GameNames.WORDLE },
+                  identifier: {
+                    gte: wordleIdentifier - 1,
+                    lte: wordleIdentifier,
+                  },
+                },
+                {
+                  game: { name: GameNames.CONTEXTO },
+                  identifier: {
+                    gte: getContextoIdentifierFromWordleIdentifier(wordleIdentifier) - 1,
+                    lte: getContextoIdentifierFromWordleIdentifier(wordleIdentifier),
+                  },
+                }
+              ],
             },
-            orderBy: { createdAt: "desc" },
+            orderBy: { identifier: "desc" },
           },
           _count: {
             select: {
@@ -44,16 +55,7 @@ export const cardsRouter = createTRPCRouter({
       if (!userWithTodayScoreAndGroups) throw new Error("User not found");
 
       const { gameScores, _count } = userWithTodayScoreAndGroups;
-      let streak = 0;
-
-      // TODO: simplify this, this is a mess
-      if (gameScores.length > 0 && gameScores[0] && (
-          (gameScores[0].date.getTime() > beginningOfYesterday.getTime() && gameScores[0].date.getTime() < beginningOfToday.getTime()) ||
-          (gameScores[0].date.getTime() > beginningOfToday.getTime() && gameScores[0].date.getTime() < endOfToday.getTime())
-        )) {
-        streak = gameScores[0].streak;
-      }
-
+      const streak = (gameScores.length > 0 && gameScores[0]) ? gameScores[0].streak : 0;
       const userGroups = _count.userGroupRoles;
 
       return { streak, userGroups };

@@ -43,6 +43,12 @@ const DataCard: React.FC<DataCardProps> = ({ data, setUpdatePanelOpen, updatePan
           {data.comment}
         </div>
       )}
+      <div
+        onClick={() => setUpdatePanelOpen(!updatePanelOpen)}
+        className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex space-between gap-4 px-6 py-2 rounded-full hover:scale-x-[102.5%] transition cursor-pointer">
+        <span>Add previous data!</span>
+        <span>→</span>
+      </div>
     </div>
   )
 };

@@ -14,7 +14,7 @@ const ContextoCard: React.FC<ContextoCardProps> = ({ refreshGroups }) => {
   const wordleIdentifier = getWordleIdentifier();
   const query = api.contexto.get.useQuery({ identifier: getContextoIdentifierFromWordleIdentifier(wordleIdentifier) });
 
-  const [updatePanelOpen, setUpdatePanelOpen] = useState(true);
+  const [updatePanelOpen, setUpdatePanelOpen] = useState(false);
   const [data, setData] = useState<ContextoData>();
 
   useEffect(() => {
@@ -40,7 +40,8 @@ const ContextoCard: React.FC<ContextoCardProps> = ({ refreshGroups }) => {
     <InputResults
       setUpdatePanelOpen={setUpdatePanelOpen}
       updatePanelOpen={updatePanelOpen}
-      setData={setData}
+      // setData={setData}
+      refreshQuery={async () => { await query.refetch() }}
       refreshGroups={refreshGroups}
       />
   );

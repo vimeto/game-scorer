@@ -30,7 +30,8 @@ const WordleCard: React.FC<WordleCardProps> = ({ refreshGroups }) => {
   const back = <InputResults
     setUpdatePanelOpen={setUpdatePanelOpen}
     updatePanelOpen={updatePanelOpen}
-    setData={setData}
+    // setData={setData}
+    refreshQuery={async () => { await query.refetch() }}
     refreshGroups={refreshGroups}
     />;
 

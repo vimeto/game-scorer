@@ -1,18 +1,17 @@
 import { TRPCClientError } from "@trpc/client";
 import { useState } from "react";
-import { getContextoIdentifier } from "../../../entities/contextoHelper";
-import { type ContextoData } from "../../../entities/types";
 import { api } from "../../../utils/api";
 import { LoginInput } from "../../ui/LoginInput";
 
 interface InputResultsProps {
   setUpdatePanelOpen: (value: boolean) => void;
   updatePanelOpen: boolean;
-  setData: (value: ContextoData) => void;
+  // setData: (value: ContextoData) => void;
   refreshGroups: () => Promise<void>;
+  refreshQuery: () => Promise<void>;
 }
 
-const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdatePanelOpen, setData, refreshGroups }) => {
+const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdatePanelOpen, refreshQuery, refreshGroups }) => {
   const [inputValue, setInputValue] = useState("");
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,16 +20,18 @@ const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdateP
 
   const onSubmit = async () => {
     try {
-      const { data } = await inputContextoResults.mutateAsync({ data: inputValue, comment });
+      // TODO: do smth with the data (don't refresh query if not needed)
+      await inputContextoResults.mutateAsync({ data: inputValue, comment });
+      // const { data } = await inputContextoResults.mutateAsync({ data: inputValue, comment });
+      await refreshQuery();
       setUpdatePanelOpen(!updatePanelOpen);
-      setData(data);
+      // setData(data);
       await refreshGroups();
     }
     catch (e: unknown) {
       if (e instanceof TRPCClientError) {
         const { message } = e;
         setError(message);
-        // setTimeout(() => setError(null), 7000);
       }
     }
   }
@@ -38,7 +39,7 @@ const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdateP
   return (
     <div className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex flex-col items-center w-[250px] p-2 rounded gap-2">
       <h3 className="text-2xl text-center">Contexto</h3>
-      <h3 className="text-md text-center">Input results for #{getContextoIdentifier()}</h3>
+      <h3 className="text-md text-center">Input results</h3>
       {error && (
         <div className="bg-red-400/70 p-2 rounded outline-1 outline-red-400 outline w-full text-center">
           {error}

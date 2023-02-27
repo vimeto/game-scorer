@@ -89,12 +89,13 @@ const ResultsCard: React.FC<{ id: string }> = ({ id }) => {
   if (loading || (Object.keys(myResults).length === 0 && Object.keys(bestResults).length === 0)) return <div>Loading...</div>
 
   return (
-    <div className="bg-gray-300/10 text-white max-w-screen-sm mx-auto mt-12 rounded">
+    <div className="text-white max-w-screen-sm mx-auto mt-12 rounded flex flex-col gap-4">
       <Datepicker
         value={dateValues}
         onChange={(data,) => handleDateValueChange(data)}
         maxDate={new Date()}
         startWeekOn={"mon"}
+        inputClassName="bg-gray-500/10 text-white rounded"
         readOnly
         />
       <table className="table-auto w-full text-left">

@@ -46,7 +46,7 @@ interface GroupResultType {
     username: string;
     userBgColor: string;
     identifier: number;
-  };
+  }[];
   Contexto?: {
     score: number;
     comment: string | null;
@@ -54,7 +54,7 @@ interface GroupResultType {
     username: string;
     userBgColor: string;
     identifier: number;
-  }
+  }[];
 }
 
 enum UserGroupRoleNames {

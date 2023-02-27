@@ -186,7 +186,7 @@ export const groupRouter = createTRPCRouter({
       }),
       weekResults: protectedProcedure
       .input(getWeekResultsShape)
-      .query(async ({ input, ctx }) => {
+      .mutation(async ({ input, ctx }) => {
         const userId = ctx.session.user.id;
         const { fromWordleIdentifier, toWordleIdentifier, id } = input;
         if (!userId) throw new Error("User not found");
@@ -275,30 +275,65 @@ export const groupRouter = createTRPCRouter({
             (result.game.name === GameNames.WORDLE && result.identifier === runningIdentifier) ||
             (result.game.name === GameNames.CONTEXTO && result.identifier === getContextoIdentifierFromWordleIdentifier(runningIdentifier))));
 
+          // 1. total won days
+          // 2. total draw days -- wordle.length === 1 --
+          // 3. total wordle wins -- wordle reduce to length === 1, and group by users, and count length of array
+          // 4. total contexto wins -- contexto reduce to length === 1, and group by users, and count length of array
+          // 5. days with no results -- wordle.length === 0 && contexto.length === 0
+
           filteredResults.forEach((result) => {
             if (result.userId === userId) {
               if (!myResultsObject[formattedDate]) myResultsObject[formattedDate] = {};
               if (result.game.name === GameNames.WORDLE || result.game.name === GameNames.CONTEXTO) {
-                (myResultsObject[formattedDate] as GroupResultType)[result.game.name] = {
+                (myResultsObject[formattedDate] as GroupResultType)[result.game.name] = [{
                   score: result.score,
                   comment: result.comment,
                   data: result.data,
                   username: result.user.username || "",
                   userBgColor: result.user.bgColor || "#ff0000",
                   identifier: result.identifier,
-                };
+                }];
               }
             }
             if (result.game.name === GameNames.WORDLE || result.game.name === GameNames.CONTEXTO) {
-              if (!(bestResultsObject[formattedDate] as GroupResultType)[result.game.name] || ((bestResultsObject[formattedDate] as GroupResultType)[result.game.name]?.score || 1000) > result.score) {
-                (bestResultsObject[formattedDate] as GroupResultType)[result.game.name] = {
+              if (!(bestResultsObject[formattedDate] as GroupResultType)[result.game.name] || (bestResultsObject[formattedDate] as GroupResultType)[result.game.name]?.length === 0) {
+                (bestResultsObject[formattedDate] as GroupResultType)[result.game.name] = [{
                   score: result.score,
                   comment: result.comment,
                   data: result.data,
                   username: result.user.username || "",
                   userBgColor: result.user.bgColor || "#ff0000",
                   identifier: result.identifier,
-                };
+                }];
+              }
+              else if ((bestResultsObject[formattedDate] as GroupResultType)[result.game.name] && (bestResultsObject[formattedDate] as GroupResultType)[result.game.name]?.length || 0 > 0) {
+                const firstResult = ((bestResultsObject[formattedDate] as GroupResultType)[result.game.name] || [])[0];
+                if (!firstResult) return;
+
+                if (firstResult.score > result.score) {
+                  (bestResultsObject[formattedDate] as GroupResultType)[result.game.name] = [{
+                    score: result.score,
+                    comment: result.comment,
+                    data: result.data,
+                    username: result.user.username || "",
+                    userBgColor: result.user.bgColor || "#ff0000",
+                    identifier: result.identifier,
+                  }];
+                }
+
+                else if (firstResult.score === result.score) {
+                  (bestResultsObject[formattedDate] as GroupResultType)[result.game.name] = [
+                    ...((bestResultsObject[formattedDate] as GroupResultType)[result.game.name] || []),
+                    {
+                      score: result.score,
+                      comment: result.comment,
+                      data: result.data,
+                      username: result.user.username || "",
+                      userBgColor: result.user.bgColor || "#ff0000",
+                      identifier: result.identifier,
+                    },
+                  ];
+                }
               }
             }
           });

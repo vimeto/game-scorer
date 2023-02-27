@@ -9,6 +9,13 @@ const getWordleIdentifier = () => {
   return Math.floor((beginningOfToday.getTime() - wordleCreationDate.getTime()) / (1000 * 3600 * 24)) + 1;
 }
 
+const getWordleIdentifierForDate = (date: Date) => {
+  const wordleCreationDate = new Date("2021-06-19T00:00:00.000Z");
+  const beginningDate = date;
+  beginningDate.setHours(0, 0, 0, 0);
+  return Math.floor((beginningDate.getTime() - wordleCreationDate.getTime()) / (1000 * 3600 * 24)) + 1;
+}
+
 const parseInput = (input: string): { data?: WordleData, error: string } => {
   const lines = input.split('\n');
   let firstLineFound = false;
@@ -147,6 +154,7 @@ const getDateFromWordleIdentifier = (identifier: number) => {
 export {
   parseInput,
   getWordleIdentifier,
+  getWordleIdentifierForDate,
   updateWordleStreaksWithDelay,
   getDateFromWordleIdentifier,
 }

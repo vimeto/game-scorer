@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Datepicker from "react-tailwindcss-datepicker";
 
-import { type GroupResultType } from "../../../entities/types";
+import { type GroupUsers, type LeaderBoardObject, type GroupResultType } from "../../../entities/types";
 import { getWordleIdentifierForDate } from "../../../entities/wordleHelper";
 import { api } from "../../../utils/api";
 import WordleResultsCell from "./ResultCards/Wordle";
@@ -54,6 +54,8 @@ const ResultsCard: React.FC<{ id: string }> = ({ id }) => {
   const [loading, setLoading] = useState(false);
   const [myResults, setMyResults] = useState<Record<string, GroupResultType>>({});
   const [bestResults, setBestResults] = useState<Record<string, GroupResultType>>({});
+  const [leaderBoard, setLeaderBoard] = useState<LeaderBoardObject>({} as LeaderBoardObject);
+  const [leaderBoardUsers, setLeaderBoardUsers] = useState<GroupUsers>({} as GroupUsers);
 
   const mutation = api.group.weekResults.useMutation();
 
@@ -70,6 +72,7 @@ const ResultsCard: React.FC<{ id: string }> = ({ id }) => {
     setDateValues(datesParsed);
   }
 
+  // TODO: refactor this to not use useEffect
   useEffect(() => {
     const refetchQuery = async () => {
       try {
@@ -77,6 +80,8 @@ const ResultsCard: React.FC<{ id: string }> = ({ id }) => {
         const res = await mutation.mutateAsync({ ...convertDateObjectToWordleRange(dateValues), id });
         setMyResults(res.myResults);
         setBestResults(res.bestResults);
+        setLeaderBoard(res.leaderBoards);
+        setLeaderBoardUsers(res.users);
         setLoading(false);
       } catch (e) {
         console.error(e);
@@ -98,6 +103,23 @@ const ResultsCard: React.FC<{ id: string }> = ({ id }) => {
         inputClassName="bg-gray-500/10 text-white rounded"
         readOnly
         />
+      {Object.keys(leaderBoard).length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="text-xl font-bold">Leaderboard</div>
+          <div className="flex flex-col gap-2">
+            {Object.keys(leaderBoard).map((gameName, index) => (
+              <div key={index} className="">
+                <div className="py-2">{gameName} wins</div>
+                {Object.keys(leaderBoard[gameName as keyof LeaderBoardObject] || {}).map((username, index) => (
+                  <div style={{ backgroundColor: `${leaderBoardUsers[username]?.userBgColor || "#000000"}33` }} key={index} className="py-2 px-4 bg-gray-300/10 inline-block mr-2 rounded-full">
+                    {username} - {leaderBoard[gameName as keyof LeaderBoardObject][username]}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <table className="table-auto w-full text-left">
         <thead>
         <tr className="bg-gray-500/10 text-white">

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GameNames, type GroupResultType, UserGroupRoleNames, type GroupedUserGroupScoreValueTypes, getContextoIdentifierFromWordleIdentifier } from "../../../entities/types";
+import { GameNames, type GroupResultType, UserGroupRoleNames, type GroupedUserGroupScoreValueTypes, getContextoIdentifierFromWordleIdentifier, type GroupUsers, type LeaderBoardObject } from "../../../entities/types";
 import { getDateFromWordleIdentifier } from "../../../entities/wordleHelper";
 import { prisma } from "../../db";
 
@@ -57,30 +57,6 @@ export const groupRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       if (!userId) throw new Error("User not found");
 
-      // const beginningOfYesterday = new Date();
-      // beginningOfYesterday.setDate(beginningOfYesterday.getDate() - 1);
-      // beginningOfYesterday.setHours(0, 0, 0, 0);
-      // const beginningOfToday = new Date();
-      // beginningOfToday.setDate(beginningOfToday.getDate() - 4);
-      // beginningOfToday.setHours(0, 0, 0, 0);
-      // const endOfToday = new Date();
-      // endOfToday.setDate(endOfToday.getDate() - 4);
-      // endOfToday.setHours(23, 59, 59, 999);
-
-      // const result = await prisma.$queryRaw<UserGroupQueryType[]>`
-      //   SELECT Game.name AS gameName, UserGroup.id AS userGroupId, UserGroup.name AS userGroupName, u1.username AS username, MIN(GameScore.score) AS score
-      //   FROM UserGroup
-      //   JOIN _UserToUserGroup utug1 ON utug1.B = UserGroup.id
-      //   JOIN User u1 ON utug1.A = u1.id
-      //   JOIN _UserToUserGroup utug2 ON utug2.B = UserGroup.id
-      //   JOIN User u2 ON utug2.A = u2.id
-      //   JOIN GameScore ON GameScore.userId = u1.id
-      //   JOIN Game ON GameScore.gameId = Game.id
-      //   WHERE Game.name IN ('Contexto', 'Wordle') AND u2.id = ${userId} AND GameScore.date >= ${beginningOfToday} AND GameScore.date <= ${endOfToday}
-      //   GROUP BY Game.name, UserGroup.id, u1.id
-      //   ORDER BY MIN(GameScore.score) ASC;
-      // `;
-      //
       const contextoIdentifier = getContextoIdentifierFromWordleIdentifier(wordleIdentifier);
 
       const result = await prisma.$queryRaw<UserGroupQueryType[]>`
@@ -260,9 +236,7 @@ export const groupRouter = createTRPCRouter({
         });
 
         const myResultsObject: Record<string, GroupResultType> = {};
-        // const myResults: (GroupResultType & { date: string })[] = [];
         const bestResultsObject: Record<string, GroupResultType> = {};
-        // const bestResults: (GroupResultType & { date: string })[] = [];
 
         let runningIdentifier = fromWordleIdentifier;
 
@@ -274,12 +248,6 @@ export const groupRouter = createTRPCRouter({
           const filteredResults = results.filter((result) => (
             (result.game.name === GameNames.WORDLE && result.identifier === runningIdentifier) ||
             (result.game.name === GameNames.CONTEXTO && result.identifier === getContextoIdentifierFromWordleIdentifier(runningIdentifier))));
-
-          // 1. total won days
-          // 2. total draw days -- wordle.length === 1 --
-          // 3. total wordle wins -- wordle reduce to length === 1, and group by users, and count length of array
-          // 4. total contexto wins -- contexto reduce to length === 1, and group by users, and count length of array
-          // 5. days with no results -- wordle.length === 0 && contexto.length === 0
 
           filteredResults.forEach((result) => {
             if (result.userId === userId) {
@@ -337,65 +305,64 @@ export const groupRouter = createTRPCRouter({
               }
             }
           });
-
           runningIdentifier += 1;
-
         }
 
+        const users = {} as GroupUsers;
+        const leaderBoards = {
+          Wordle: {},
+          Contexto: {},
+        } as LeaderBoardObject;
 
-        // let startDate = startOfDay(fromDate);
-        // let endDate = endOfDay(fromDate);
+        Object.keys(bestResultsObject).forEach((date) => {
+          const dayObject = bestResultsObject[date];
+          if (!dayObject) return;
 
-        // while (endDate.getTime() <= toDate.getTime()) {
-        //   const formattedStartDate = format(startDate, "dd.MM.yyyy");
-        //   if (!myResultsObject[formattedStartDate]) myResultsObject[formattedStartDate] = {};
-        //   if (!bestResultsObject[formattedStartDate]) bestResultsObject[formattedStartDate] = {};
-
-        //   const filteredResults = results.filter((result) => (
-        //     result.date.getTime() >= startDate.getTime() && result.date.getTime() <= endDate.getTime()))
-        //   filteredResults.forEach((result) => {
-        //     if (result.userId === userId) {
-        //       if (!myResultsObject[formattedStartDate]) myResultsObject[formattedStartDate] = {};
-        //       if (result.game.name === "Wordle" || result.game.name === "Contexto") {
-        //         (myResultsObject[formattedStartDate] as GroupResultType)[result.game.name] = {
-        //           score: result.score,
-        //           comment: result.comment,
-        //           data: result.data,
-        //           username: result.user.username || "",
-        //           userBgColor: result.user.bgColor || "#ff0000",
-        //           identifier: result.identifier,
-        //         };
-        //       }
-        //     }
-
-        //     if (!bestResultsObject[formattedStartDate]) bestResultsObject[formattedStartDate] = {};
-        //     if (result.game.name === "Wordle" || result.game.name === "Contexto") {
-        //       if (!(bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name] || ((bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name]?.score || 1000) > result.score) {
-        //         (bestResultsObject[formattedStartDate] as GroupResultType)[result.game.name] = {
-        //           score: result.score,
-        //           comment: result.comment,
-        //           data: result.data,
-        //           username: result.user.username || "",
-        //           userBgColor: result.user.bgColor || "#ff0000",
-        //           identifier: result.identifier,
-        //         };
-        //       }
-        //     }
-        //   });
-
-        //   // #9ab8f7
-
-        //   // myResults.push({ ...myResultsObject[formattedStartDate], date: formattedStartDate });
-        //   // bestResults.push({ ...bestResultsObject[formattedStartDate], date: formattedStartDate });
-
-        //   startDate = addDays(startDate, 1);
-        //   endDate = addDays(endDate, 1);
-        // }
-
+          if (dayObject.Wordle && dayObject.Wordle.length > 0 && dayObject.Wordle[0]) {
+            if (dayObject.Wordle.length > 1) {
+              if (!leaderBoards.Wordle["tie"]) {
+                leaderBoards.Wordle["tie"] = 1;
+              } else {
+                leaderBoards.Wordle["tie"] += 1;
+              }
+            } else {
+              const username = dayObject.Wordle[0].username;
+              if (!users[username]) {
+                users[username] =  { userBgColor: dayObject.Wordle[0].userBgColor };
+              }
+              if (!leaderBoards.Wordle[username]) {
+                leaderBoards.Wordle[username] = 1;
+              } else {
+                leaderBoards.Wordle[username] += 1;
+              }
+            }
+          }
+          if (dayObject.Contexto && dayObject.Contexto.length > 0 && dayObject.Contexto[0]) {
+            if (dayObject.Contexto.length > 1) {
+              if (!leaderBoards.Contexto["tie"]) {
+                leaderBoards.Contexto["tie"] = 1;
+              } else {
+                leaderBoards.Contexto["tie"] += 1;
+              }
+            } else {
+              const username = dayObject.Contexto[0].username;
+              if (!users[username]) {
+                users[username] =  { userBgColor: dayObject.Contexto[0].userBgColor };
+              }
+              if (!leaderBoards.Contexto[username]) {
+                leaderBoards.Contexto[username] = 1;
+              } else {
+                leaderBoards.Contexto[username] += 1;
+              }
+            }
+          }
+        });
 
         return {
           myResults: myResultsObject,
           bestResults: bestResultsObject,
+          users,
+          leaderBoards,
         };
       }),
       create: protectedProcedure

@@ -57,6 +57,15 @@ interface GroupResultType {
   }[];
 }
 
+type GroupUsers = Record<string, {
+  userBgColor: string;
+}>;
+
+interface LeaderBoardObject {
+  Wordle: Record<string, number>;
+  Contexto: Record<string, number>;
+}
+
 enum UserGroupRoleNames {
   ADMIN = "admin",
   MEMBER = "member",
@@ -91,5 +100,7 @@ export {
   GameNames,
   type InputTypes,
   getContextoIdentifierFromWordleIdentifier,
+  type GroupUsers,
+  type LeaderBoardObject,
   // ContextoEmojiMap,
 }

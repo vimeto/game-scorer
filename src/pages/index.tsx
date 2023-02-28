@@ -1,5 +1,4 @@
 import { type NextPage } from "next";
-import { signOut } from "next-auth/react";
 
 import WordleCard from "../components/WordleCard";
 import ContextoCard from "../components/ContextoCard";
@@ -23,9 +22,7 @@ const Index: NextPage = () => {
   return (
     <div>
       <div className="pt-40">
-        <h1
-          className="text-4xl font-extrabold tracking-tight text-white sm:text-[5rem] text-center leading-normal"
-          onClick={() => { signOut().catch(e => console.error(e)) }}>
+        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-[5rem] text-center leading-normal">
           Game scorer
         </h1>
         <HeaderCards refreshGroups={async () => { await query.refetch() }} />

@@ -4,6 +4,7 @@ import { type JSONValue } from "superjson/dist/types";
 import { z } from "zod";
 
 import { type GroupResultType } from "../../../../entities/types";
+import { truncateStringToLength } from "../../../../utils/string";
 
 const ContextoResultsTooltipContent: React.FC<{ data: JSONValue | undefined, comment?: string | null }> = ({ data, comment }) => {
   const contextoDataShape = z.object({
@@ -39,8 +40,9 @@ const ContextoResultsCell: React.FC<{ data: GroupResultType["Contexto"] | undefi
           <>
             <p>Contexto #{contextoData?.identifier} <span className="font-bold">{`${contextoData?.score}`}</span></p>
             {bestResults && (
-              <div>
-                <span style={{ backgroundColor: `${contextoData.userBgColor}99` }} className={`px-1.5 py-0.5 rounded-full`}>- {contextoData.username}</span>
+              <div style={{ backgroundColor: `${contextoData.userBgColor}99` }} className="flex flex-row gap-1 px-1.5 py-0.5 rounded-full">
+                <p>-</p>
+                <p className="">{truncateStringToLength(contextoData.username, 12)}</p>
               </div>
             )}
           </>

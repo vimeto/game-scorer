@@ -36,7 +36,7 @@ const Group = () => {
         {query.data.group.userGroupRoles.filter(member => !member.user).length > 0 && (
           <div className="text-center pt-3">
             <h3 className="text-3xl text-white">Pending</h3>
-            {query.data.group.userGroupRoles.filter(member => !member.user).map((member, index) => (
+            {query.data.group.userGroupRoles.filter(member => !member.user && member.userInvitation).map((member, index) => (
               <div key={index} className="inline-flex py-2 pl-2 pr-4 bg-gray-300/10 text-white hover:bg-gray-100/10 m-2 flex-row gap-2 rounded items-center">
                 <div className="text-md">{`${member.userInvitation?.email || ""}`}</div>
               </div>

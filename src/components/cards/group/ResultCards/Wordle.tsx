@@ -4,6 +4,7 @@ import { type JSONValue } from "superjson/dist/types";
 import { z } from "zod";
 
 import { type GroupResultType, WordleEmojiMap } from "../../../../entities/types";
+import { truncateStringToLength } from "../../../../utils/string";
 
 
 const WordleResultsTooltipContent: React.FC<{ data: JSONValue | undefined, comment?: string | null }> = ({ data, comment }) => {
@@ -55,9 +56,10 @@ const WordleResultsCell: React.FC<{ data: GroupResultType["Wordle"] | undefined,
           <p>Wordle #{firstWordleData?.identifier} <span className="font-bold">{`${firstWordleData?.score}/6`}</span></p>
           {data.map((wordleData, index) => (
              <Tooltip key={index} content={<WordleResultsTooltipContent data={wordleData.data} comment={wordleData.comment} />} className="bg-gray-400 p-1">
-                <div>
-                  <span style={{ backgroundColor: `${wordleData.userBgColor}99` }} className={`px-1.5 py-0.5 rounded-full`}>- {wordleData.username}</span>
-              </div>
+                <div style={{ backgroundColor: `${wordleData.userBgColor}99` }} className="inline-flex flex-row gap-1 px-1.5 py-0.5 rounded-full mt-1">
+                  <p>-</p>
+                  <p className="">{truncateStringToLength(wordleData.username, 12)}</p>
+                </div>
              </Tooltip>
           ))}
         </>

@@ -53,7 +53,7 @@ const InputResults: React.FC<InputResultsProps> = ({ updatePanelOpen, setUpdateP
         onChange={(e) => setInputValue(e.target.value)}
         placeholder="Input results here"
         />
-      <LoginInput id={"comment"} type={"text"} placeholder={"Comment"} value={comment} onChange={e => setComment(e.target.value)} />
+      <LoginInput id={"wordle-comment"} type={"text"} placeholder={"Comment"} value={comment} onChange={e => setComment(e.target.value)} />
       <div
         className="bg-gray-300/10 text-white hover:bg-gray-100/10 flex space-between gap-4 px-6 py-2 rounded-full hover:gap-6 transition-all cursor-pointer"
         onClick={() => { onSubmit().catch(e => console.error(e)) }}

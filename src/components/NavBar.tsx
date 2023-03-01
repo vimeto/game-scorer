@@ -25,7 +25,7 @@ const NavBar: React.FC = () => {
           )}
           {!iAmHome && (
             <div
-              className="absolute left-0 top-1/2 translate-x-1/4 -translate-y-1/2 text-xl font-bold text-white hover:text-white/80 px-4 py-2 bg-gray-600/10 flex items-center justify-center rounded-full shadow-lg cursor-pointer"
+              className="absolute left-0 top-1/2 translate-x-1/4 -translate-y-1/2 text-xl font-bold text-white hover:text-white/80 px-4 py-2 bg-[#5E67A3] z-20 flex items-center justify-center rounded-full shadow-lg cursor-pointer"
               onClick={() => router.back()}
               >
                 ← BACK
